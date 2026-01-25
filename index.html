@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TechStore - USB & CD Shop with Admin Panel</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -68,6 +72,12 @@
             font-size: 1.8rem;
         }
 
+        .logo span {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-left: 10px;
+        }
+
         nav ul {
             display: flex;
             list-style: none;
@@ -107,6 +117,24 @@
             color: #666;
             max-width: 700px;
             margin: 0 auto 25px;
+        }
+
+        .connection-status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px auto;
+            width: fit-content;
+            font-size: 0.9rem;
+        }
+
+        .connected {
+            background: rgba(76, 201, 240, 0.2);
+            color: var(--accent);
+        }
+
+        .disconnected {
+            background: rgba(220, 53, 69, 0.2);
+            color: var(--danger);
         }
 
         .btn {
@@ -570,7 +598,10 @@
             <div class="header-content">
                 <div class="logo">
                     <i class="fas fa-store"></i>
-                    <h1>TechStore</h1>
+                    <div>
+                        <h1>TechStore <span id="connection-status">(Loading...)</span></h1>
+                        <p id="firebase-status" class="connection-status"></p>
+                    </div>
                 </div>
                 <nav>
                     <ul>
@@ -585,6 +616,7 @@
         <section class="hero">
             <h2>Quality USB Drives & CDs</h2>
             <p>Find the perfect storage solutions for your data needs. From high-speed USB drives to reliable CDs and DVDs, we have it all.</p>
+            <p class="connection-status" id="db-status">Connecting to database...</p>
             <a href="#usb" class="btn">Shop Now</a>
         </section>
 
@@ -694,13 +726,54 @@
             </div>
         </div>
 
+        <!-- Firebase Config Modal -->
+        <div class="modal" id="firebase-config-modal">
+            <div class="modal-content">
+                <h2>Firebase Configuration</h2>
+                <p>Please enter your Firebase configuration details to connect to your real-time database:</p>
+                <form id="firebase-config-form">
+                    <div class="form-group">
+                        <label class="form-label">API Key</label>
+                        <input type="text" class="form-control" id="firebase-api-key" placeholder="Enter your Firebase API key" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Auth Domain</label>
+                        <input type="text" class="form-control" id="firebase-auth-domain" placeholder="Enter your Firebase Auth Domain" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Project ID</label>
+                        <input type="text" class="form-control" id="firebase-project-id" placeholder="Enter your Firebase Project ID" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Storage Bucket</label>
+                        <input type="text" class="form-control" id="firebase-storage-bucket" placeholder="Enter your Firebase Storage Bucket" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Messaging Sender ID</label>
+                        <input type="text" class="form-control" id="firebase-messaging-sender-id" placeholder="Enter your Firebase Messaging Sender ID" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">App ID</label>
+                        <input type="text" class="form-control" id="firebase-app-id" placeholder="Enter your Firebase App ID" required>
+                    </div>
+                    <div class="form-group" style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn" style="flex: 1;">Save Configuration</button>
+                        <button type="button" class="btn btn-admin" id="cancel-firebase-config" style="flex: 1;">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Stock Manager Panel -->
         <div class="stock-manager" id="stock-manager">
-            <h2>Stock Manager</h2>
+            <h2>Stock Manager <span id="firebase-sync-indicator"></span></h2>
             <div class="admin-actions">
                 <button class="btn" id="add-product-btn">Add New Product</button>
                 <button class="btn btn-admin" id="export-data-btn">Export Product Data</button>
                 <button class="btn btn-admin" id="import-data-btn">Import Product Data</button>
+                <button class="btn btn-admin" id="sync-to-firebase-btn">Sync to Firebase</button>
+                <button class="btn btn-admin" id="load-from-firebase-btn">Load from Firebase</button>
+                <button class="btn btn-admin" id="configure-firebase-btn">Firebase Config</button>
             </div>
             <table class="stock-table">
                 <thead>
@@ -722,6 +795,7 @@
 
         <footer>
             <p>&copy; 2023 TechStore. All rights reserved.</p>
+            <p>Real-time stock management powered by Firebase</p>
         </footer>
     </div>
 
@@ -729,6 +803,21 @@
     <div id="notification-container"></div>
 
     <script>
+        // Firebase configuration
+        const DEFAULT_FIREBASE_CONFIG = {
+            apiKey: "AIzaSyBnGUA7AD6Cdp2ICaNf8Yaj6FXOjS2IyBg",
+            authDomain: "cdshopmenager.firebaseapp.com",
+            projectId: "cdshopmenager",
+            storageBucket: "cdshopmenager.firebasestorage.app",
+            messagingSenderId: "115220345473",
+            appId: "1:115220345473:web:c64b5443dff40453b91380",
+            measurementId: "G-JV7CP5C1XW"
+        };
+
+        let firebaseApp = null;
+        let database = null;
+        let firebaseInitialized = false;
+
         // Product data - initialized with existing products
         let products = [
             {
@@ -822,12 +911,17 @@
         const cancelAddProductBtn = document.getElementById('cancel-add-product');
         const exportDataBtn = document.getElementById('export-data-btn');
         const importDataBtn = document.getElementById('import-data-btn');
+        const syncToFirebaseBtn = document.getElementById('sync-to-firebase-btn');
+        const loadFromFirebaseBtn = document.getElementById('load-from-firebase-btn');
+        const configureFirebaseBtn = document.getElementById('configure-firebase-btn');
+        const firebaseConfigModal = document.getElementById('firebase-config-modal');
+        const firebaseConfigForm = document.getElementById('firebase-config-form');
+        const cancelFirebaseConfigBtn = document.getElementById('cancel-firebase-config');
         const notificationContainer = document.getElementById('notification-container');
-
-        // Generate unique ID for products
-        function generateProductId() {
-            return products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-        }
+        const connectionStatus = document.getElementById('connection-status');
+        const dbStatus = document.getElementById('db-status');
+        const firebaseStatus = document.getElementById('firebase-status');
+        const firebaseSyncIndicator = document.getElementById('firebase-sync-indicator');
 
         // Show notification
         function showNotification(message, type = 'info', duration = 3000) {
@@ -846,26 +940,222 @@
             }, duration);
         }
 
-        // Initialize the shop
-        function initShop() {
-            // Try to load products from localStorage
-            const savedProducts = localStorage.getItem('techstore_products');
-            if (savedProducts) {
-                try {
-                    products = JSON.parse(savedProducts);
-                } catch (e) {
-                    console.error('Failed to load products from localStorage', e);
+        // Initialize Firebase
+        function initializeFirebase(config) {
+            try {
+                firebaseApp = firebase.initializeApp(config);
+                database = firebase.database();
+                firebaseInitialized = true;
+                
+                // Update status
+                connectionStatus.textContent = "(Connected)";
+                connectionStatus.style.color = "var(--success)";
+                dbStatus.textContent = "✅ Connected to Firebase database";
+                dbStatus.className = "connection-status connected";
+                firebaseStatus.textContent = "Firebase: Connected";
+                firebaseStatus.className = "connection-status connected";
+                
+                showNotification("Connected to Firebase database", "success");
+                
+                // Listen for real-time updates
+                listenForStockUpdates();
+                
+                return true;
+            } catch (error) {
+                console.error("Firebase initialization error:", error);
+                connectionStatus.textContent = "(Offline)";
+                connectionStatus.style.color = "var(--danger)";
+                dbStatus.textContent = "⚠️ Firebase connection failed. Using local storage.";
+                dbStatus.className = "connection-status disconnected";
+                firebaseStatus.textContent = "Firebase: Connection failed";
+                firebaseStatus.className = "connection-status disconnected";
+                showNotification("Firebase connection failed. Using local storage.", "error");
+                return false;
+            }
+        }
+
+        // Listen for real-time stock updates from Firebase
+        function listenForStockUpdates() {
+            if (!firebaseInitialized || !database) return;
+            
+            try {
+                const productsRef = database.ref('products');
+                
+                productsRef.on('value', (snapshot) => {
+                    const firebaseProducts = snapshot.val();
+                    
+                    if (firebaseProducts) {
+                        // Convert Firebase object to array
+                        const newProducts = Object.values(firebaseProducts);
+                        
+                        // Update local products
+                        products = newProducts;
+                        
+                        // Update UI
+                        renderProducts();
+                        if (stockManager.style.display === 'block') {
+                            renderStockManager();
+                        }
+                        
+                        // Show sync indicator
+                        firebaseSyncIndicator.innerHTML = '<i class="fas fa-sync-alt" style="color: var(--accent); margin-left: 10px;"></i>';
+                        setTimeout(() => {
+                            firebaseSyncIndicator.innerHTML = '';
+                        }, 2000);
+                        
+                        // Show notification if not from our own action
+                        if (!window.ignoreFirebaseUpdate) {
+                            showNotification("Stock updated from cloud", "info", 1500);
+                        }
+                        window.ignoreFirebaseUpdate = false;
+                    }
+                }, (error) => {
+                    console.error("Firebase read failed:", error);
+                    showNotification("Failed to sync with Firebase", "error");
+                });
+            } catch (error) {
+                console.error("Error setting up Firebase listener:", error);
+            }
+        }
+
+        // Save products to Firebase
+        async function saveProductsToFirebase() {
+            if (!firebaseInitialized || !database) {
+                showNotification("Firebase not configured", "error");
+                return false;
+            }
+            
+            try {
+                // Convert array to object with IDs as keys
+                const productsObject = {};
+                products.forEach(product => {
+                    productsObject[product.id] = product;
+                });
+                
+                // Set the flag to ignore our own update
+                window.ignoreFirebaseUpdate = true;
+                
+                // Save to Firebase
+                await database.ref('products').set(productsObject);
+                
+                showNotification("Products synced to Firebase", "success");
+                return true;
+            } catch (error) {
+                console.error("Firebase save error:", error);
+                showNotification("Failed to sync with Firebase", "error");
+                return false;
+            }
+        }
+
+        // Load products from Firebase
+        async function loadProductsFromFirebase() {
+            if (!firebaseInitialized || !database) {
+                showNotification("Firebase not configured", "error");
+                return false;
+            }
+            
+            try {
+                const snapshot = await database.ref('products').once('value');
+                const firebaseProducts = snapshot.val();
+                
+                if (firebaseProducts) {
+                    // Convert Firebase object to array
+                    const newProducts = Object.values(firebaseProducts);
+                    
+                    // Update local products
+                    products = newProducts;
+                    
+                    // Save to local storage as backup
+                    saveProductsToStorage();
+                    
+                    // Update UI
+                    renderProducts();
+                    if (stockManager.style.display === 'block') {
+                        renderStockManager();
+                    }
+                    
+                    showNotification("Products loaded from Firebase", "success");
+                    return true;
+                } else {
+                    showNotification("No products found in Firebase", "info");
+                    return false;
                 }
+            } catch (error) {
+                console.error("Firebase load error:", error);
+                showNotification("Failed to load from Firebase", "error");
+                return false;
+            }
+        }
+
+        // Save products to localStorage
+        function saveProductsToStorage() {
+            try {
+                localStorage.setItem('techstore_products', JSON.stringify(products));
+                localStorage.setItem('techstore_last_sync', new Date().toISOString());
+            } catch (e) {
+                console.error('Failed to save products to localStorage', e);
+            }
+        }
+
+        // Load products from localStorage
+        function loadProductsFromStorage() {
+            try {
+                const savedProducts = localStorage.getItem('techstore_products');
+                if (savedProducts) {
+                    const parsedProducts = JSON.parse(savedProducts);
+                    if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
+                        products = parsedProducts;
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load products from localStorage', e);
+            }
+            return false;
+        }
+
+        // Generate unique ID for products
+        function generateProductId() {
+            return products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+        }
+
+        // Initialize the shop
+        async function initShop() {
+            // Load Firebase configuration
+            let firebaseConfig = DEFAULT_FIREBASE_CONFIG;
+            
+            // Try to load saved config
+            try {
+                const savedConfig = localStorage.getItem('techstore_firebase_config');
+                if (savedConfig) {
+                    firebaseConfig = JSON.parse(savedConfig);
+                }
+            } catch (e) {
+                console.error('Failed to load Firebase config from localStorage', e);
+            }
+            
+            // Initialize Firebase
+            const firebaseSuccess = initializeFirebase(firebaseConfig);
+            
+            // Load products (from Firebase if available, otherwise from localStorage)
+            if (firebaseSuccess) {
+                const loaded = await loadProductsFromFirebase();
+                if (!loaded) {
+                    // If Firebase doesn't have data, try localStorage
+                    const fromStorage = loadProductsFromStorage();
+                    if (fromStorage) {
+                        // Sync local data to Firebase
+                        setTimeout(() => saveProductsToFirebase(), 1000);
+                    }
+                }
+            } else {
+                // If Firebase failed, load from localStorage
+                loadProductsFromStorage();
             }
             
             renderProducts();
             updateCartDisplay();
             setupEventListeners();
-        }
-
-        // Save products to localStorage
-        function saveProductsToStorage() {
-            localStorage.setItem('techstore_products', JSON.stringify(products));
         }
 
         // Setup event listeners
@@ -927,6 +1217,12 @@
                 }
             });
 
+            firebaseConfigModal.addEventListener('click', function(e) {
+                if (e.target === firebaseConfigModal) {
+                    firebaseConfigModal.style.display = 'none';
+                }
+            });
+
             // Logout from stock manager
             logoutBtn.addEventListener('click', function() {
                 stockManager.style.display = 'none';
@@ -952,7 +1248,7 @@
             });
 
             // Add product form submission
-            addProductForm.addEventListener('submit', function(e) {
+            addProductForm.addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
                 const newProduct = {
@@ -970,6 +1266,9 @@
                 renderProducts();
                 renderStockManager();
                 addProductModal.style.display = 'none';
+                
+                // Sync to Firebase
+                await saveProductsToFirebase();
                 
                 showNotification(`Product "${newProduct.name}" added successfully!`, 'success');
             });
@@ -995,11 +1294,11 @@
                 input.type = 'file';
                 input.accept = '.json';
                 
-                input.onchange = function(e) {
+                input.onchange = async function(e) {
                     const file = e.target.files[0];
                     const reader = new FileReader();
                     
-                    reader.onload = function(event) {
+                    reader.onload = async function(event) {
                         try {
                             const importedProducts = JSON.parse(event.target.result);
                             
@@ -1014,6 +1313,10 @@
                                     saveProductsToStorage();
                                     renderProducts();
                                     renderStockManager();
+                                    
+                                    // Sync to Firebase
+                                    await saveProductsToFirebase();
+                                    
                                     showNotification(`${validProducts.length} products imported successfully`, 'success');
                                 } else {
                                     showNotification('Invalid product data format', 'error');
@@ -1030,6 +1333,84 @@
                 };
                 
                 input.click();
+            });
+
+            // Sync to Firebase button
+            syncToFirebaseBtn.addEventListener('click', async function() {
+                const success = await saveProductsToFirebase();
+                if (success) {
+                    showNotification('Products synced to Firebase', 'success');
+                }
+            });
+
+            // Load from Firebase button
+            loadFromFirebaseBtn.addEventListener('click', async function() {
+                const success = await loadProductsFromFirebase();
+                if (success) {
+                    showNotification('Products loaded from Firebase', 'success');
+                }
+            });
+
+            // Configure Firebase button
+            configureFirebaseBtn.addEventListener('click', function() {
+                firebaseConfigModal.style.display = 'flex';
+                
+                // Load current config if exists
+                try {
+                    const savedConfig = localStorage.getItem('techstore_firebase_config');
+                    if (savedConfig) {
+                        const config = JSON.parse(savedConfig);
+                        document.getElementById('firebase-api-key').value = config.apiKey || '';
+                        document.getElementById('firebase-auth-domain').value = config.authDomain || '';
+                        document.getElementById('firebase-project-id').value = config.projectId || '';
+                        document.getElementById('firebase-storage-bucket').value = config.storageBucket || '';
+                        document.getElementById('firebase-messaging-sender-id').value = config.messagingSenderId || '';
+                        document.getElementById('firebase-app-id').value = config.appId || '';
+                    } else {
+                        // Use default config
+                        document.getElementById('firebase-api-key').value = DEFAULT_FIREBASE_CONFIG.apiKey;
+                        document.getElementById('firebase-auth-domain').value = DEFAULT_FIREBASE_CONFIG.authDomain;
+                        document.getElementById('firebase-project-id').value = DEFAULT_FIREBASE_CONFIG.projectId;
+                        document.getElementById('firebase-storage-bucket').value = DEFAULT_FIREBASE_CONFIG.storageBucket;
+                        document.getElementById('firebase-messaging-sender-id').value = DEFAULT_FIREBASE_CONFIG.messagingSenderId;
+                        document.getElementById('firebase-app-id').value = DEFAULT_FIREBASE_CONFIG.appId;
+                    }
+                } catch (e) {
+                    console.error('Error loading Firebase config', e);
+                }
+            });
+
+            // Cancel Firebase config
+            cancelFirebaseConfigBtn.addEventListener('click', function() {
+                firebaseConfigModal.style.display = 'none';
+            });
+
+            // Save Firebase configuration
+            firebaseConfigForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const newConfig = {
+                    apiKey: document.getElementById('firebase-api-key').value,
+                    authDomain: document.getElementById('firebase-auth-domain').value,
+                    projectId: document.getElementById('firebase-project-id').value,
+                    storageBucket: document.getElementById('firebase-storage-bucket').value,
+                    messagingSenderId: document.getElementById('firebase-messaging-sender-id').value,
+                    appId: document.getElementById('firebase-app-id').value
+                };
+                
+                // Save config to localStorage
+                localStorage.setItem('techstore_firebase_config', JSON.stringify(newConfig));
+                
+                // Reinitialize Firebase
+                const success = initializeFirebase(newConfig);
+                
+                if (success) {
+                    firebaseConfigModal.style.display = 'none';
+                    showNotification('Firebase configuration saved and connected', 'success');
+                    
+                    // Sync products to Firebase
+                    setTimeout(() => saveProductsToFirebase(), 500);
+                }
             });
         }
 
@@ -1176,15 +1557,29 @@
             
             // Add event listeners to update stock buttons
             document.querySelectorAll('.update-stock').forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', async function() {
                     const productId = parseInt(this.getAttribute('data-id'));
-                    updateStock(productId);
+                    const product = products.find(p => p.id === productId);
+                    const newStock = prompt(`Enter new stock quantity for ${product.name}:`, product.stock);
+                    
+                    if (newStock !== null && !isNaN(newStock) && newStock >= 0) {
+                        product.stock = parseInt(newStock);
+                        saveProductsToStorage();
+                        renderStockManager();
+                        renderProducts();
+                        updateCartDisplay();
+                        
+                        // Sync to Firebase
+                        await saveProductsToFirebase();
+                        
+                        showNotification(`Stock updated for ${product.name}`, 'success');
+                    }
                 });
             });
             
             // Add event listeners to edit product buttons (admin only)
             document.querySelectorAll('.edit-product').forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', async function() {
                     const productId = parseInt(this.getAttribute('data-id'));
                     editProduct(productId);
                 });
@@ -1192,26 +1587,11 @@
             
             // Add event listeners to delete product buttons (admin only)
             document.querySelectorAll('.delete-product').forEach(button => {
-                button.addEventListener('click', function() {
+                button.addEventListener('click', async function() {
                     const productId = parseInt(this.getAttribute('data-id'));
                     deleteProduct(productId);
                 });
             });
-        }
-
-        // Update stock for a product
-        function updateStock(productId) {
-            const product = products.find(p => p.id === productId);
-            const newStock = prompt(`Enter new stock quantity for ${product.name}:`, product.stock);
-            
-            if (newStock !== null && !isNaN(newStock) && newStock >= 0) {
-                product.stock = parseInt(newStock);
-                saveProductsToStorage();
-                renderStockManager();
-                renderProducts();
-                updateCartDisplay();
-                showNotification(`Stock updated for ${product.name}`, 'success');
-            }
         }
 
         // Edit product (admin only)
@@ -1270,7 +1650,7 @@
             document.body.appendChild(editModal);
             
             // Handle form submission
-            editModal.querySelector('#edit-product-form').addEventListener('submit', function(e) {
+            editModal.querySelector('#edit-product-form').addEventListener('submit', async function(e) {
                 e.preventDefault();
                 
                 product.name = document.getElementById('edit-product-name').value;
@@ -1284,6 +1664,9 @@
                 renderProducts();
                 renderStockManager();
                 editModal.remove();
+                
+                // Sync to Firebase
+                await saveProductsToFirebase();
                 
                 showNotification(`Product "${product.name}" updated successfully!`, 'success');
             });
@@ -1302,7 +1685,7 @@
         }
 
         // Delete product (admin only)
-        function deleteProduct(productId) {
+        async function deleteProduct(productId) {
             const product = products.find(p => p.id === productId);
             
             if (confirm(`Are you sure you want to delete "${product.name}"? This action cannot be undone.`)) {
@@ -1310,12 +1693,16 @@
                 saveProductsToStorage();
                 renderProducts();
                 renderStockManager();
+                
+                // Sync to Firebase
+                await saveProductsToFirebase();
+                
                 showNotification(`Product "${product.name}" deleted successfully`, 'info');
             }
         }
 
         // Checkout process
-        function checkout() {
+        async function checkout() {
             if (cart.length === 0) {
                 showNotification('Your cart is empty!', 'error');
                 return;
@@ -1346,6 +1733,9 @@
             
             saveProductsToStorage();
             
+            // Sync to Firebase
+            await saveProductsToFirebase();
+            
             // Show success message with order summary
             const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -1364,42 +1754,6 @@
 
         // Initialize the shop when page loads
         document.addEventListener('DOMContentLoaded', initShop);
-   
-  // Import Firebase SDKs
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
-
-  // Your Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyBnGUA7AD6Cdp2ICaNf8Yaj6FXOjS2IyBg",
-    authDomain: "cdshopmenager.firebaseapp.com",
-    projectId: "cdshopmenager",
-    storageBucket: "cdshopmenager.firebasestorage.app",
-    messagingSenderId: "115220345473",
-    appId: "1:115220345473:web:c64b5443dff40453b91380",
-    measurementId: "G-JV7CP5C1XW"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-
-
     </script>
-    
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.x.x/firebase-app.js";
-
-  const firebaseConfig = {
-    apiKey: "...",
-    authDomain: "...",
-    projectId: "...",
-    storageBucket: "...",
-    messagingSenderId: "...",
-    appId: "..."
-  };
-
-  const app = initializeApp(firebaseConfig);
-</script>
-
 </body>
 </html>
