@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechStore - USB & CD Shop with Admin Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --accent: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4bb543;
+            --warning: #ffcc00;
+            --danger: #dc3545;
+            --admin: #6c757d;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            color: var(--dark);
+            line-height: 1.6;
+            scroll-behavior: smooth;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px 0;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 20px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 8px 15px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        nav a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .hero {
+            text-align: center;
+            padding: 40px 20px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .hero h2 {
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            color: #666;
+            max-width: 700px;
+            margin: 0 auto 25px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-admin {
+            background: var(--admin);
+        }
+
+        .btn-admin:hover {
+            background: #5a6268;
+        }
+
+        .products {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .product-image {
+            height: 200px;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: var(--primary);
+        }
+
+        .product-info {
+            padding: 20px;
+        }
+
+        .product-category {
+            display: inline-block;
+            padding: 5px 10px;
+            background: var(--accent);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+
+        .product-name {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .product-description {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        .product-price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .product-stock {
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .stock-high {
+            color: var(--success);
+        }
+
+        .stock-low {
+            color: var(--warning);
+        }
+
+        .stock-out {
+            color: var(--danger);
+        }
+
+        .add-to-cart {
+            width: 100%;
+            padding: 10px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .add-to-cart:hover {
+            background: var(--secondary);
+        }
+
+        .add-to-cart:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .cart-summary {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .cart-summary h3 {
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+
+        .cart-items {
+            margin-bottom: 20px;
+        }
+
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .cart-total {
+            font-weight: 700;
+            font-size: 1.2rem;
+            text-align: right;
+            margin-top: 15px;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        .checkout-btn:hover {
+            background: #3a9e36;
+        }
+
+        .admin-btn {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            background: var(--admin);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .admin-btn:hover {
+            background: #5a6268;
+            transform: scale(1.1);
+        }
+
+        .stock-manager-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--dark);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .stock-manager-btn:hover {
+            background: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: var(--secondary);
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 1em;
+        }
+
+        .stock-manager {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-top: 30px;
+        }
+
+        .stock-manager h2 {
+            margin-bottom: 20px;
+            color: var(--secondary);
+            text-align: center;
+        }
+
+        .admin-actions {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .admin-actions .btn {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .stock-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .stock-table th, .stock-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stock-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .stock-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .update-stock, .edit-product, .delete-product {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .update-stock {
+            background: var(--primary);
+            color: white;
+        }
+
+        .update-stock:hover {
+            background: var(--secondary);
+        }
+
+        .edit-product {
+            background: var(--accent);
+            color: white;
+        }
+
+        .edit-product:hover {
+            background: #0db4d8;
+        }
+
+        .delete-product {
+            background: var(--danger);
+            color: white;
+        }
+
+        .delete-product:hover {
+            background: #c82333;
+        }
+
+        .logout-btn {
+            display: block;
+            margin: 20px auto 0;
+            padding: 10px 20px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 40px;
+            color: #666;
+            border-top: 1px solid #eee;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 6px;
+            color: white;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: var(--success);
+        }
+
+        .notification.error {
+            background: var(--danger);
+        }
+
+        .notification.info {
+            background: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            nav ul {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .products {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            }
+
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="logo">
+                    <i class="fas fa-store"></i>
+                    <h1>TechStore</h1>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#usb">USB Drives</a></li>
+                        <li><a href="#cd">CDs & DVDs</a></li>
+                        <li><a href="#cart">Cart</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </header>
+
+        <section class="hero">
+            <h2>Quality USB Drives & CDs</h2>
+            <p>Find the perfect storage solutions for your data needs. From high-speed USB drives to reliable CDs and DVDs, we have it all.</p>
+            <a href="#usb" class="btn">Shop Now</a>
+        </section>
+
+        <section id="usb">
+            <h2 style="margin-bottom: 20px; color: var(--secondary);">USB Drives</h2>
+            <div class="products" id="usb-products">
+                <!-- USB products will be added by JavaScript -->
+            </div>
+        </section>
+
+        <section id="cd">
+            <h2 style="margin-bottom: 20px; color: var(--secondary);">CDs & DVDs</h2>
+            <div class="products" id="cd-products">
+                <!-- CD products will be added by JavaScript -->
+            </div>
+        </section>
+
+        <section id="cart">
+            <div class="cart-summary">
+                <h3>Your Cart</h3>
+                <div class="cart-items" id="cart-items">
+                    <!-- Cart items will be added by JavaScript -->
+                </div>
+                <div class="cart-total" id="cart-total">Total: $0.00</div>
+                <button class="checkout-btn" id="checkout-btn">Proceed to Checkout</button>
+            </div>
+        </section>
+
+        <div class="admin-btn" id="admin-btn" title="Admin Panel">
+            <i class="fas fa-user-shield"></i>
+        </div>
+
+        <div class="stock-manager-btn" id="stock-manager-btn" title="Stock Manager">
+            <i class="fas fa-cog"></i>
+        </div>
+
+        <!-- Admin Login Modal -->
+        <div class="modal" id="admin-login-modal">
+            <div class="modal-content">
+                <h2>Admin Panel Login</h2>
+                <div class="form-group">
+                    <label class="form-label">Admin Password</label>
+                    <input type="password" class="form-control" id="admin-password-input" placeholder="Enter admin password">
+                </div>
+                <button class="btn" id="admin-login-btn" style="width: 100%;">Login as Admin</button>
+                <p id="admin-login-error" style="color: var(--danger); text-align: center; margin-top: 15px; display: none;">Incorrect password. Please try again.</p>
+            </div>
+        </div>
+
+        <!-- Stock Manager Login Modal -->
+        <div class="modal" id="stock-login-modal">
+            <div class="modal-content">
+                <h2>Stock Manager Login</h2>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-control" id="password-input" placeholder="Enter your password">
+                </div>
+                <button class="btn" id="login-btn" style="width: 100%;">Login</button>
+                <p id="login-error" style="color: var(--danger); text-align: center; margin-top: 15px; display: none;">Incorrect password. Please try again.</p>
+            </div>
+        </div>
+
+        <!-- Add Product Modal -->
+        <div class="modal" id="add-product-modal">
+            <div class="modal-content">
+                <h2>Add New Product</h2>
+                <form id="add-product-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Product Name</label>
+                            <input type="text" class="form-control" id="product-name" placeholder="Enter product name" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select class="form-control" id="product-category" required>
+                                <option value="">Select category</option>
+                                <option value="USB">USB Drive</option>
+                                <option value="CD">CD/DVD</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="product-description" rows="3" placeholder="Enter product description" required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Price ($)</label>
+                            <input type="number" class="form-control" id="product-price" step="0.01" min="0" placeholder="Enter price" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Initial Stock</label>
+                            <input type="number" class="form-control" id="product-stock" min="0" placeholder="Enter initial stock" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Icon Class (FontAwesome)</label>
+                        <input type="text" class="form-control" id="product-icon" placeholder="e.g., fa-usb, fa-compact-disc" value="fa-box">
+                        <small>You can find icons at <a href="https://fontawesome.com/icons" target="_blank">fontawesome.com</a></small>
+                    </div>
+                    <div class="form-group" style="display: flex; gap: 10px;">
+                        <button type="submit" class="btn" style="flex: 1;">Add Product</button>
+                        <button type="button" class="btn btn-admin" id="cancel-add-product" style="flex: 1;">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Stock Manager Panel -->
+        <div class="stock-manager" id="stock-manager">
+            <h2>Stock Manager</h2>
+            <div class="admin-actions">
+                <button class="btn" id="add-product-btn">Add New Product</button>
+                <button class="btn btn-admin" id="export-data-btn">Export Product Data</button>
+                <button class="btn btn-admin" id="import-data-btn">Import Product Data</button>
+            </div>
+            <table class="stock-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="stock-table-body">
+                    <!-- Stock data will be added by JavaScript -->
+                </tbody>
+            </table>
+            <button class="logout-btn" id="logout-btn">Logout</button>
+        </div>
+
+        <footer>
+            <p>&copy; 2023 TechStore. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <script>
+        // Product data - initialized with existing products
+        let products = [
+            {
+                id: 1,
+                name: "SD CARD 8GB",
+                category: "USB",
+                description: "High-speed USB 3.0 drive with 64GB storage capacity.",
+                price: 13,
+                stock: 9,
+                icon: "fa-usb"
+            },
+            {
+                id: 2,
+                name: "SD CARD 4GB",
+                category: "USB",
+                description: "High-speed USB 3.0 drive with 64GB storage capacity.",
+                price: 10,
+                stock: 7,
+                icon: "fa-usb"
+            },
+            {
+                id: 3,
+                name: "USB 8GB",
+                category: "USB",
+                description: "High-speed USB 3.0 drive with 64GB storage capacity.",
+                price: 13,
+                stock: 2,
+                icon: "fa-usb"
+            },
+            {
+                id: 4,
+                name: "USB 4GB",
+                category: "USB",
+                description: "High-speed USB 3.0 drive with 64GB storage capacity.",
+                price: 8,
+                stock: 36,
+                icon: "fa-usb"
+            },
+            {
+                id: 5,
+                name: "USB 64GB",
+                category: "USB",
+                description: "High-speed USB 3.0 drive with 64GB storage capacity.",
+                price: 25,
+                stock: 8,
+                icon: "fa-usb"
+            },
+            {
+                id: 6,
+                name: "USB 8/16GB",
+                category: "USB",
+                description: "High-speed USB 3.0 drive with 64GB storage capacity.",
+                price: 15,
+                stock: 5,
+                icon: "fa-usb"
+            },
+        ];
+
+        // Cart data
+        let cart = [];
+
+        // Passwords for admin and stock manager
+        const ADMIN_PASSWORD = "admin123";
+        const STOCK_MANAGER_PASSWORD = "stock123";
+
+        // Current user type (admin or stock manager)
+        let currentUserType = null;
+
+        // DOM elements
+        const usbProductsContainer = document.getElementById('usb-products');
+        const cdProductsContainer = document.getElementById('cd-products');
+        const cartItemsContainer = document.getElementById('cart-items');
+        const cartTotalElement = document.getElementById('cart-total');
+        const adminBtn = document.getElementById('admin-btn');
+        const stockManagerBtn = document.getElementById('stock-manager-btn');
+        const adminLoginModal = document.getElementById('admin-login-modal');
+        const stockLoginModal = document.getElementById('stock-login-modal');
+        const adminPasswordInput = document.getElementById('admin-password-input');
+        const adminLoginBtn = document.getElementById('admin-login-btn');
+        const adminLoginError = document.getElementById('admin-login-error');
+        const passwordInput = document.getElementById('password-input');
+        const loginBtn = document.getElementById('login-btn');
+        const loginError = document.getElementById('login-error');
+        const stockManager = document.getElementById('stock-manager');
+        const stockTableBody = document.getElementById('stock-table-body');
+        const logoutBtn = document.getElementById('logout-btn');
+        const checkoutBtn = document.getElementById('checkout-btn');
+        const addProductModal = document.getElementById('add-product-modal');
+        const addProductBtn = document.getElementById('add-product-btn');
+        const addProductForm = document.getElementById('add-product-form');
+        const cancelAddProductBtn = document.getElementById('cancel-add-product');
+        const exportDataBtn = document.getElementById('export-data-btn');
+        const importDataBtn = document.getElementById('import-data-btn');
+        const notificationContainer = document.getElementById('notification-container');
+
+        // Generate unique ID for products
+        function generateProductId() {
+            return products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+        }
+
+        // Show notification
+        function showNotification(message, type = 'info', duration = 3000) {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            notificationContainer.appendChild(notification);
+            
+            // Trigger animation
+            setTimeout(() => notification.classList.add('show'), 10);
+            
+            // Remove notification after duration
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, duration);
+        }
+
+        // Initialize the shop
+        function initShop() {
+            // Try to load products from localStorage
+            const savedProducts = localStorage.getItem('techstore_products');
+            if (savedProducts) {
+                try {
+                    products = JSON.parse(savedProducts);
+                } catch (e) {
+                    console.error('Failed to load products from localStorage', e);
+                }
+            }
+            
+            renderProducts();
+            updateCartDisplay();
+            setupEventListeners();
+        }
+
+        // Save products to localStorage
+        function saveProductsToStorage() {
+            localStorage.setItem('techstore_products', JSON.stringify(products));
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Admin login
+            adminBtn.addEventListener('click', function() {
+                adminLoginModal.style.display = 'flex';
+                adminPasswordInput.value = '';
+                adminLoginError.style.display = 'none';
+            });
+
+            adminLoginBtn.addEventListener('click', function() {
+                if (adminPasswordInput.value === ADMIN_PASSWORD) {
+                    adminLoginModal.style.display = 'none';
+                    stockManager.style.display = 'block';
+                    currentUserType = 'admin';
+                    renderStockManager();
+                    showNotification('Admin login successful', 'success');
+                } else {
+                    adminLoginError.style.display = 'block';
+                }
+            });
+
+            // Stock manager login
+            stockManagerBtn.addEventListener('click', function() {
+                stockLoginModal.style.display = 'flex';
+                passwordInput.value = '';
+                loginError.style.display = 'none';
+            });
+
+            loginBtn.addEventListener('click', function() {
+                if (passwordInput.value === STOCK_MANAGER_PASSWORD) {
+                    stockLoginModal.style.display = 'none';
+                    stockManager.style.display = 'block';
+                    currentUserType = 'stock';
+                    renderStockManager();
+                    showNotification('Stock manager login successful', 'success');
+                } else {
+                    loginError.style.display = 'block';
+                }
+            });
+
+            // Close modals when clicking outside
+            adminLoginModal.addEventListener('click', function(e) {
+                if (e.target === adminLoginModal) {
+                    adminLoginModal.style.display = 'none';
+                }
+            });
+
+            stockLoginModal.addEventListener('click', function(e) {
+                if (e.target === stockLoginModal) {
+                    stockLoginModal.style.display = 'none';
+                }
+            });
+
+            addProductModal.addEventListener('click', function(e) {
+                if (e.target === addProductModal) {
+                    addProductModal.style.display = 'none';
+                }
+            });
+
+            // Logout from stock manager
+            logoutBtn.addEventListener('click', function() {
+                stockManager.style.display = 'none';
+                currentUserType = null;
+                showNotification('Logged out successfully', 'info');
+            });
+
+            // Checkout process
+            checkoutBtn.addEventListener('click', function() {
+                checkout();
+            });
+
+            // Add product button
+            addProductBtn.addEventListener('click', function() {
+                addProductModal.style.display = 'flex';
+                addProductForm.reset();
+                document.getElementById('product-icon').value = 'fa-box';
+            });
+
+            // Cancel add product
+            cancelAddProductBtn.addEventListener('click', function() {
+                addProductModal.style.display = 'none';
+            });
+
+            // Add product form submission
+            addProductForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const newProduct = {
+                    id: generateProductId(),
+                    name: document.getElementById('product-name').value,
+                    category: document.getElementById('product-category').value,
+                    description: document.getElementById('product-description').value,
+                    price: parseFloat(document.getElementById('product-price').value),
+                    stock: parseInt(document.getElementById('product-stock').value),
+                    icon: document.getElementById('product-icon').value || 'fa-box'
+                };
+                
+                products.push(newProduct);
+                saveProductsToStorage();
+                renderProducts();
+                renderStockManager();
+                addProductModal.style.display = 'none';
+                
+                showNotification(`Product "${newProduct.name}" added successfully!`, 'success');
+            });
+
+            // Export product data
+            exportDataBtn.addEventListener('click', function() {
+                const dataStr = JSON.stringify(products, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+                
+                const exportFileDefaultName = `techstore-products-${new Date().toISOString().split('T')[0]}.json`;
+                
+                const linkElement = document.createElement('a');
+                linkElement.setAttribute('href', dataUri);
+                linkElement.setAttribute('download', exportFileDefaultName);
+                linkElement.click();
+                
+                showNotification('Product data exported successfully', 'success');
+            });
+
+            // Import product data
+            importDataBtn.addEventListener('click', function() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                
+                input.onchange = function(e) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(event) {
+                        try {
+                            const importedProducts = JSON.parse(event.target.result);
+                            
+                            if (Array.isArray(importedProducts)) {
+                                // Validate imported products
+                                const validProducts = importedProducts.filter(p => 
+                                    p.id && p.name && p.category && p.price && typeof p.stock === 'number'
+                                );
+                                
+                                if (validProducts.length > 0) {
+                                    products = validProducts;
+                                    saveProductsToStorage();
+                                    renderProducts();
+                                    renderStockManager();
+                                    showNotification(`${validProducts.length} products imported successfully`, 'success');
+                                } else {
+                                    showNotification('Invalid product data format', 'error');
+                                }
+                            } else {
+                                showNotification('Invalid file format. Expected an array of products.', 'error');
+                            }
+                        } catch (error) {
+                            showNotification('Error parsing JSON file', 'error');
+                        }
+                    };
+                    
+                    reader.readAsText(file);
+                };
+                
+                input.click();
+            });
+        }
+
+        // Render products based on category
+        function renderProducts() {
+            // Clear containers
+            usbProductsContainer.innerHTML = '';
+            cdProductsContainer.innerHTML = '';
+
+            // Render each product
+            products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                
+                // Determine stock status class
+                let stockClass = 'stock-high';
+                if (product.stock < 5) stockClass = 'stock-low';
+                if (product.stock === 0) stockClass = 'stock-out';
+                
+                productCard.innerHTML = `
+                    <div class="product-image">
+                        <i class="fas ${product.icon}"></i>
+                    </div>
+                    <div class="product-info">
+                        <span class="product-category">${product.category}</span>
+                        <h3 class="product-name">${product.name}</h3>
+                        <p class="product-description">${product.description}</p>
+                        <div class="product-price">$${product.price.toFixed(2)}</div>
+                        <div class="product-stock ${stockClass}">${product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}</div>
+                        <button class="add-to-cart" ${product.stock === 0 ? 'disabled' : ''} data-id="${product.id}">
+                            ${product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                        </button>
+                    </div>
+                `;
+                
+                // Add to appropriate container
+                if (product.category === 'USB') {
+                    usbProductsContainer.appendChild(productCard);
+                } else if (product.category === 'CD') {
+                    cdProductsContainer.appendChild(productCard);
+                } else {
+                    // For other categories, add to both or create separate section
+                    usbProductsContainer.appendChild(productCard);
+                }
+            });
+
+            // Add event listeners to add to cart buttons
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = parseInt(this.getAttribute('data-id'));
+                    addToCart(productId);
+                });
+            });
+        }
+
+        // Add product to cart
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            
+            if (!product || product.stock === 0) return;
+            
+            // Check if product is already in cart
+            const cartItem = cart.find(item => item.id === productId);
+            
+            if (cartItem) {
+                // If already in cart, increase quantity if stock allows
+                if (cartItem.quantity < product.stock) {
+                    cartItem.quantity++;
+                    showNotification(`Added another ${product.name} to cart`, 'info', 1500);
+                } else {
+                    showNotification(`Only ${product.stock} units of ${product.name} available!`, 'error');
+                    return;
+                }
+            } else {
+                // Add new item to cart
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    quantity: 1
+                });
+                showNotification(`${product.name} added to cart`, 'success', 1500);
+            }
+            
+            updateCartDisplay();
+        }
+
+        // Update cart display
+        function updateCartDisplay() {
+            // Clear cart items
+            cartItemsContainer.innerHTML = '';
+            
+            let total = 0;
+            
+            // Add each cart item
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                total += itemTotal;
+                
+                const cartItemElement = document.createElement('div');
+                cartItemElement.className = 'cart-item';
+                cartItemElement.innerHTML = `
+                    <span>${item.name} x${item.quantity}</span>
+                    <span>$${itemTotal.toFixed(2)}</span>
+                `;
+                
+                cartItemsContainer.appendChild(cartItemElement);
+            });
+            
+            // Update total
+            cartTotalElement.textContent = `Total: $${total.toFixed(2)}`;
+            
+            // Show empty message if cart is empty
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = '<p>Your cart is empty</p>';
+            }
+        }
+
+        // Render stock manager table
+        function renderStockManager() {
+            stockTableBody.innerHTML = '';
+            
+            products.forEach(product => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${product.id}</td>
+                    <td>${product.name}</td>
+                    <td>${product.category}</td>
+                    <td>$${product.price.toFixed(2)}</td>
+                    <td>${product.stock}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="update-stock" data-id="${product.id}">Update Stock</button>
+                            ${currentUserType === 'admin' ? `
+                                <button class="edit-product" data-id="${product.id}">Edit</button>
+                                <button class="delete-product" data-id="${product.id}">Delete</button>
+                            ` : ''}
+                        </div>
+                    </td>
+                `;
+                
+                stockTableBody.appendChild(row);
+            });
+            
+            // Add event listeners to update stock buttons
+            document.querySelectorAll('.update-stock').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = parseInt(this.getAttribute('data-id'));
+                    updateStock(productId);
+                });
+            });
+            
+            // Add event listeners to edit product buttons (admin only)
+            document.querySelectorAll('.edit-product').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = parseInt(this.getAttribute('data-id'));
+                    editProduct(productId);
+                });
+            });
+            
+            // Add event listeners to delete product buttons (admin only)
+            document.querySelectorAll('.delete-product').forEach(button => {
+                button.addEventListener('click', function() {
+                    const productId = parseInt(this.getAttribute('data-id'));
+                    deleteProduct(productId);
+                });
+            });
+        }
+
+        // Update stock for a product
+        function updateStock(productId) {
+            const product = products.find(p => p.id === productId);
+            const newStock = prompt(`Enter new stock quantity for ${product.name}:`, product.stock);
+            
+            if (newStock !== null && !isNaN(newStock) && newStock >= 0) {
+                product.stock = parseInt(newStock);
+                saveProductsToStorage();
+                renderStockManager();
+                renderProducts();
+                updateCartDisplay();
+                showNotification(`Stock updated for ${product.name}`, 'success');
+            }
+        }
+
+        // Edit product (admin only)
+        function editProduct(productId) {
+            const product = products.find(p => p.id === productId);
+            
+            // Create edit modal
+            const editModal = document.createElement('div');
+            editModal.className = 'modal';
+            editModal.style.display = 'flex';
+            
+            editModal.innerHTML = `
+                <div class="modal-content">
+                    <h2>Edit Product</h2>
+                    <form id="edit-product-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Product Name</label>
+                                <input type="text" class="form-control" id="edit-product-name" value="${product.name}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <select class="form-control" id="edit-product-category" required>
+                                    <option value="USB" ${product.category === 'USB' ? 'selected' : ''}>USB Drive</option>
+                                    <option value="CD" ${product.category === 'CD' ? 'selected' : ''}>CD/DVD</option>
+                                    <option value="Other" ${product.category === 'Other' ? 'selected' : ''}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="edit-product-description" rows="3" required>${product.description}</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Price ($)</label>
+                                <input type="number" class="form-control" id="edit-product-price" step="0.01" min="0" value="${product.price}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Stock</label>
+                                <input type="number" class="form-control" id="edit-product-stock" min="0" value="${product.stock}" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Icon Class (FontAwesome)</label>
+                            <input type="text" class="form-control" id="edit-product-icon" value="${product.icon}">
+                        </div>
+                        <div class="form-group" style="display: flex; gap: 10px;">
+                            <button type="submit" class="btn" style="flex: 1;">Save Changes</button>
+                            <button type="button" class="btn btn-admin" id="cancel-edit-product" style="flex: 1;">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(editModal);
+            
+            // Handle form submission
+            editModal.querySelector('#edit-product-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                product.name = document.getElementById('edit-product-name').value;
+                product.category = document.getElementById('edit-product-category').value;
+                product.description = document.getElementById('edit-product-description').value;
+                product.price = parseFloat(document.getElementById('edit-product-price').value);
+                product.stock = parseInt(document.getElementById('edit-product-stock').value);
+                product.icon = document.getElementById('edit-product-icon').value || 'fa-box';
+                
+                saveProductsToStorage();
+                renderProducts();
+                renderStockManager();
+                editModal.remove();
+                
+                showNotification(`Product "${product.name}" updated successfully!`, 'success');
+            });
+            
+            // Handle cancel button
+            editModal.querySelector('#cancel-edit-product').addEventListener('click', function() {
+                editModal.remove();
+            });
+            
+            // Close modal when clicking outside
+            editModal.addEventListener('click', function(e) {
+                if (e.target === editModal) {
+                    editModal.remove();
+                }
+            });
+        }
+
+        // Delete product (admin only)
+        function deleteProduct(productId) {
+            const product = products.find(p => p.id === productId);
+            
+            if (confirm(`Are you sure you want to delete "${product.name}"? This action cannot be undone.`)) {
+                products = products.filter(p => p.id !== productId);
+                saveProductsToStorage();
+                renderProducts();
+                renderStockManager();
+                showNotification(`Product "${product.name}" deleted successfully`, 'info');
+            }
+        }
+
+        // Checkout process
+        function checkout() {
+            if (cart.length === 0) {
+                showNotification('Your cart is empty!', 'error');
+                return;
+            }
+            
+            // Check if all items are still in stock
+            let canCheckout = true;
+            let outOfStockItems = [];
+            
+            cart.forEach(item => {
+                const product = products.find(p => p.id === item.id);
+                if (product.stock < item.quantity) {
+                    canCheckout = false;
+                    outOfStockItems.push(product.name);
+                }
+            });
+            
+            if (!canCheckout) {
+                showNotification(`The following items don't have enough stock: ${outOfStockItems.join(', ')}`, 'error');
+                return;
+            }
+            
+            // Process checkout
+            cart.forEach(item => {
+                const product = products.find(p => p.id === item.id);
+                product.stock -= item.quantity;
+            });
+            
+            saveProductsToStorage();
+            
+            // Show success message with order summary
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            showNotification(`Thank you for your purchase! ${itemCount} item(s) for $${total.toFixed(2)}`, 'success', 5000);
+            
+            cart = [];
+            updateCartDisplay();
+            renderProducts();
+            
+            // If stock manager is open, update it
+            if (stockManager.style.display === 'block') {
+                renderStockManager();
+            }
+        }
+
+        // Initialize the shop when page loads
+        document.addEventListener('DOMContentLoaded', initShop);
+    </script>
+</body>
+</html>
