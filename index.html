@@ -1,1759 +1,840 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sq">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechStore - USB & CD Shop with Admin Panel</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        :root {
-            --primary: #4361ee;
-            --secondary: #3a0ca3;
-            --accent: #4cc9f0;
-            --light: #f8f9fa;
-            --dark: #212529;
-            --success: #4bb543;
-            --warning: #ffcc00;
-            --danger: #dc3545;
-            --admin: #6c757d;
-        }
-
-        body {
-            background-color: #f5f7fb;
-            color: var(--dark);
-            line-height: 1.6;
-            scroll-behavior: smooth;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 20px 0;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .logo i {
-            font-size: 2.5rem;
-        }
-
-        .logo h1 {
-            font-size: 1.8rem;
-        }
-
-        .logo span {
-            font-size: 0.8rem;
-            opacity: 0.8;
-            margin-left: 10px;
-        }
-
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 20px;
-        }
-
-        nav a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            padding: 8px 15px;
-            border-radius: 5px;
-            transition: background 0.3s;
-        }
-
-        nav a:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .hero {
-            text-align: center;
-            padding: 40px 20px;
-            background: white;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .hero h2 {
-            font-size: 2.2rem;
-            margin-bottom: 15px;
-            color: var(--secondary);
-        }
-
-        .hero p {
-            font-size: 1.1rem;
-            color: #666;
-            max-width: 700px;
-            margin: 0 auto 25px;
-        }
-
-        .connection-status {
-            padding: 10px;
-            border-radius: 5px;
-            margin: 10px auto;
-            width: fit-content;
-            font-size: 0.9rem;
-        }
-
-        .connected {
-            background: rgba(76, 201, 240, 0.2);
-            color: var(--accent);
-        }
-
-        .disconnected {
-            background: rgba(220, 53, 69, 0.2);
-            color: var(--danger);
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 12px 25px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-
-        .btn:hover {
-            background: var(--secondary);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .btn-admin {
-            background: var(--admin);
-        }
-
-        .btn-admin:hover {
-            background: #5a6268;
-        }
-
-        .products {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-
-        .product-card {
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease;
-        }
-
-        .product-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .product-image {
-            height: 200px;
-            background: #e9ecef;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-            color: var(--primary);
-        }
-
-        .product-info {
-            padding: 20px;
-        }
-
-        .product-category {
-            display: inline-block;
-            padding: 5px 10px;
-            background: var(--accent);
-            color: white;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin-bottom: 10px;
-        }
-
-        .product-name {
-            font-size: 1.3rem;
-            margin-bottom: 10px;
-        }
-
-        .product-description {
-            color: #666;
-            margin-bottom: 15px;
-            font-size: 0.95rem;
-        }
-
-        .product-price {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-
-        .product-stock {
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-        }
-
-        .stock-high {
-            color: var(--success);
-        }
-
-        .stock-low {
-            color: var(--warning);
-        }
-
-        .stock-out {
-            color: var(--danger);
-        }
-
-        .add-to-cart {
-            width: 100%;
-            padding: 10px;
-            background: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .add-to-cart:hover {
-            background: var(--secondary);
-        }
-
-        .add-to-cart:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-        }
-
-        .cart-summary {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            margin-bottom: 30px;
-        }
-
-        .cart-summary h3 {
-            margin-bottom: 15px;
-            color: var(--secondary);
-        }
-
-        .cart-items {
-            margin-bottom: 20px;
-        }
-
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .cart-total {
-            font-weight: 700;
-            font-size: 1.2rem;
-            text-align: right;
-            margin-top: 15px;
-        }
-
-        .checkout-btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--success);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 15px;
-            transition: background 0.3s;
-        }
-
-        .checkout-btn:hover {
-            background: #3a9e36;
-        }
-
-        .admin-btn {
-            position: fixed;
-            bottom: 90px;
-            right: 20px;
-            background: var(--admin);
-            color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-            z-index: 100;
-        }
-
-        .admin-btn:hover {
-            background: #5a6268;
-            transform: scale(1.1);
-        }
-
-        .stock-manager-btn {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--dark);
-            color: white;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
-            z-index: 100;
-        }
-
-        .stock-manager-btn:hover {
-            background: var(--primary);
-            transform: scale(1.1);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 600px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal h2 {
-            margin-bottom: 20px;
-            color: var(--secondary);
-            text-align: center;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 1rem;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 15px;
-        }
-
-        .form-row .form-group {
-            flex: 1;
-        }
-
-        select.form-control {
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 15px center;
-            background-size: 1em;
-        }
-
-        .stock-manager {
-            display: none;
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            margin-top: 30px;
-        }
-
-        .stock-manager h2 {
-            margin-bottom: 20px;
-            color: var(--secondary);
-            text-align: center;
-        }
-
-        .admin-actions {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 25px;
-            flex-wrap: wrap;
-        }
-
-        .admin-actions .btn {
-            flex: 1;
-            min-width: 150px;
-        }
-
-        .stock-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        .stock-table th, .stock-table td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #eee;
-        }
-
-        .stock-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-        }
-
-        .stock-table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-        }
-
-        .update-stock, .edit-product, .delete-product {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.9rem;
-        }
-
-        .update-stock {
-            background: var(--primary);
-            color: white;
-        }
-
-        .update-stock:hover {
-            background: var(--secondary);
-        }
-
-        .edit-product {
-            background: var(--accent);
-            color: white;
-        }
-
-        .edit-product:hover {
-            background: #0db4d8;
-        }
-
-        .delete-product {
-            background: var(--danger);
-            color: white;
-        }
-
-        .delete-product:hover {
-            background: #c82333;
-        }
-
-        .logout-btn {
-            display: block;
-            margin: 20px auto 0;
-            padding: 10px 20px;
-            background: var(--danger);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .logout-btn:hover {
-            background: #c82333;
-        }
-
-        footer {
-            text-align: center;
-            padding: 20px;
-            margin-top: 40px;
-            color: #666;
-            border-top: 1px solid #eee;
-        }
-
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 6px;
-            color: white;
-            font-weight: 500;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-            transform: translateX(120%);
-            transition: transform 0.3s ease;
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        .notification.success {
-            background: var(--success);
-        }
-
-        .notification.error {
-            background: var(--danger);
-        }
-
-        .notification.info {
-            background: var(--primary);
-        }
-
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 15px;
-            }
-
-            nav ul {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .products {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            }
-
-            .form-row {
-                flex-direction: column;
-                gap: 0;
-            }
-
-            .action-buttons {
-                flex-direction: column;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CD Shop Manager (Supabase)</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f172a; color: #e2e8f0; padding: 20px; min-height: 100vh;
+  }
+  .container { max-width: 1200px; margin: 0 auto; }
+  h1 {
+    font-size: 28px; margin-bottom: 8px;
+    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .subtitle { color: #94a3b8; margin-bottom: 24px; font-size: 14px; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; background: #1e293b;
+    padding: 6px; border-radius: 12px; flex-wrap: wrap; }
+  .tab { flex: 1; min-width: 120px; padding: 12px 16px; background: transparent;
+    border: none; color: #94a3b8; border-radius: 8px; cursor: pointer;
+    font-size: 14px; font-weight: 500; transition: all 0.2s; }
+  .tab:hover { color: #e2e8f0; }
+  .tab.active { background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .card { background: #1e293b; border-radius: 12px; padding: 20px;
+    margin-bottom: 16px; border: 1px solid #334155; }
+  .card h2 { font-size: 18px; margin-bottom: 16px; color: #f1f5f9; }
+
+  .grid { display: grid; gap: 16px; }
+  .grid-3 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+
+  .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px; margin-bottom: 12px; }
+
+  label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 6px; font-weight: 500; }
+  input, select {
+    width: 100%; padding: 10px 12px; background: #0f172a;
+    border: 1px solid #334155; border-radius: 8px; color: #e2e8f0;
+    font-size: 14px; outline: none;
+  }
+  input:focus, select:focus { border-color: #3b82f6; }
+
+  button { padding: 10px 20px; background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white; border: none; border-radius: 8px; cursor: pointer;
+    font-size: 14px; font-weight: 600; transition: transform 0.1s; }
+  button:hover { transform: translateY(-1px); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+  .btn-success { background: linear-gradient(135deg, #10b981, #059669); }
+  .btn-secondary { background: #334155; }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 10px; text-align: left; border-bottom: 1px solid #334155; }
+  th { color: #94a3b8; font-weight: 600; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 0.5px; }
+  tr:hover td { background: #0f172a; }
+
+  .stat { background: linear-gradient(135deg, #1e293b, #334155);
+    padding: 16px; border-radius: 10px; border-left: 3px solid #3b82f6; }
+  .stat-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-size: 22px; font-weight: 700; color: #f1f5f9; }
+  .stat.worker1 { border-left-color: #3b82f6; }
+  .stat.worker2 { border-left-color: #10b981; }
+  .stat.total { border-left-color: #f59e0b; }
+
+  .positive { color: #10b981; }
+  .negative { color: #ef4444; }
+  .empty { text-align: center; padding: 40px; color: #64748b; font-size: 14px; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .badge { display: inline-block; padding: 3px 8px; border-radius: 6px;
+    font-size: 11px; font-weight: 600; }
+  .badge-in { background: #064e3b; color: #6ee7b7; }
+
+  #toast { position: fixed; bottom: 20px; right: 20px; background: #10b981;
+    color: white; padding: 12px 20px; border-radius: 8px; font-size: 14px;
+    font-weight: 600; opacity: 0; transform: translateY(20px);
+    transition: all 0.3s; pointer-events: none; z-index: 1000; }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.error { background: #ef4444; }
+
+  #loginScreen { max-width: 400px; margin: 100px auto; }
+  #loginScreen .card { padding: 32px; }
+  .hidden { display: none !important; }
+
+  @media (max-width: 640px) {
+    body { padding: 12px; }
+    h1 { font-size: 22px; }
+    .stat-value { font-size: 18px; }
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fas fa-store"></i>
-                    <div>
-                        <h1>TechStore <span id="connection-status">(Loading...)</span></h1>
-                        <p id="firebase-status" class="connection-status"></p>
-                    </div>
-                </div>
-                <nav>
-                    <ul>
-                        <li><a href="#usb">USB Drives</a></li>
-                        <li><a href="#cd">CDs & DVDs</a></li>
-                        <li><a href="#cart">Cart</a></li>
-                    </ul>
-                </nav>
-            </div>
-        </header>
 
-        <section class="hero">
-            <h2>Quality USB Drives & CDs</h2>
-            <p>Find the perfect storage solutions for your data needs. From high-speed USB drives to reliable CDs and DVDs, we have it all.</p>
-            <p class="connection-status" id="db-status">Connecting to database...</p>
-            <a href="#usb" class="btn">Shop Now</a>
-        </section>
-
-        <section id="usb">
-            <h2 style="margin-bottom: 20px; color: var(--secondary);">USB Drives</h2>
-            <div class="products" id="usb-products">
-                <!-- USB products will be added by JavaScript -->
-            </div>
-        </section>
-
-        <section id="cd">
-            <h2 style="margin-bottom: 20px; color: var(--secondary);">CDs & DVDs</h2>
-            <div class="products" id="cd-products">
-                <!-- CD products will be added by JavaScript -->
-            </div>
-        </section>
-
-        <section id="cart">
-            <div class="cart-summary">
-                <h3>Your Cart</h3>
-                <div class="cart-items" id="cart-items">
-                    <!-- Cart items will be added by JavaScript -->
-                </div>
-                <div class="cart-total" id="cart-total">Total: $0.00</div>
-                <button class="checkout-btn" id="checkout-btn">Proceed to Checkout</button>
-            </div>
-        </section>
-
-        <div class="admin-btn" id="admin-btn" title="Admin Panel">
-            <i class="fas fa-user-shield"></i>
-        </div>
-
-        <div class="stock-manager-btn" id="stock-manager-btn" title="Stock Manager">
-            <i class="fas fa-cog"></i>
-        </div>
-
-        <!-- Admin Login Modal -->
-        <div class="modal" id="admin-login-modal">
-            <div class="modal-content">
-                <h2>Admin Panel Login</h2>
-                <div class="form-group">
-                    <label class="form-label">Admin Password</label>
-                    <input type="password" class="form-control" id="admin-password-input" placeholder="Enter admin password">
-                </div>
-                <button class="btn" id="admin-login-btn" style="width: 100%;">Login as Admin</button>
-                <p id="admin-login-error" style="color: var(--danger); text-align: center; margin-top: 15px; display: none;">Incorrect password. Please try again.</p>
-            </div>
-        </div>
-
-        <!-- Stock Manager Login Modal -->
-        <div class="modal" id="stock-login-modal">
-            <div class="modal-content">
-                <h2>Stock Manager Login</h2>
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password-input" placeholder="Enter your password">
-                </div>
-                <button class="btn" id="login-btn" style="width: 100%;">Login</button>
-                <p id="login-error" style="color: var(--danger); text-align: center; margin-top: 15px; display: none;">Incorrect password. Please try again.</p>
-            </div>
-        </div>
-
-        <!-- Add Product Modal -->
-        <div class="modal" id="add-product-modal">
-            <div class="modal-content">
-                <h2>Add New Product</h2>
-                <form id="add-product-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Product Name</label>
-                            <input type="text" class="form-control" id="product-name" placeholder="Enter product name" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Category</label>
-                            <select class="form-control" id="product-category" required>
-                                <option value="">Select category</option>
-                                <option value="USB">USB Drive</option>
-                                <option value="CD">CD/DVD</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" id="product-description" rows="3" placeholder="Enter product description" required></textarea>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Price ($)</label>
-                            <input type="number" class="form-control" id="product-price" step="0.01" min="0" placeholder="Enter price" required>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Initial Stock</label>
-                            <input type="number" class="form-control" id="product-stock" min="0" placeholder="Enter initial stock" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Icon Class (FontAwesome)</label>
-                        <input type="text" class="form-control" id="product-icon" placeholder="e.g., fa-usb, fa-compact-disc" value="fa-box">
-                        <small>You can find icons at <a href="https://fontawesome.com/icons" target="_blank">fontawesome.com</a></small>
-                    </div>
-                    <div class="form-group" style="display: flex; gap: 10px;">
-                        <button type="submit" class="btn" style="flex: 1;">Add Product</button>
-                        <button type="button" class="btn btn-admin" id="cancel-add-product" style="flex: 1;">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Firebase Config Modal -->
-        <div class="modal" id="firebase-config-modal">
-            <div class="modal-content">
-                <h2>Firebase Configuration</h2>
-                <p>Please enter your Firebase configuration details to connect to your real-time database:</p>
-                <form id="firebase-config-form">
-                    <div class="form-group">
-                        <label class="form-label">API Key</label>
-                        <input type="text" class="form-control" id="firebase-api-key" placeholder="Enter your Firebase API key" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Auth Domain</label>
-                        <input type="text" class="form-control" id="firebase-auth-domain" placeholder="Enter your Firebase Auth Domain" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Project ID</label>
-                        <input type="text" class="form-control" id="firebase-project-id" placeholder="Enter your Firebase Project ID" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Storage Bucket</label>
-                        <input type="text" class="form-control" id="firebase-storage-bucket" placeholder="Enter your Firebase Storage Bucket" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Messaging Sender ID</label>
-                        <input type="text" class="form-control" id="firebase-messaging-sender-id" placeholder="Enter your Firebase Messaging Sender ID" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">App ID</label>
-                        <input type="text" class="form-control" id="firebase-app-id" placeholder="Enter your Firebase App ID" required>
-                    </div>
-                    <div class="form-group" style="display: flex; gap: 10px;">
-                        <button type="submit" class="btn" style="flex: 1;">Save Configuration</button>
-                        <button type="button" class="btn btn-admin" id="cancel-firebase-config" style="flex: 1;">Cancel</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Stock Manager Panel -->
-        <div class="stock-manager" id="stock-manager">
-            <h2>Stock Manager <span id="firebase-sync-indicator"></span></h2>
-            <div class="admin-actions">
-                <button class="btn" id="add-product-btn">Add New Product</button>
-                <button class="btn btn-admin" id="export-data-btn">Export Product Data</button>
-                <button class="btn btn-admin" id="import-data-btn">Import Product Data</button>
-                <button class="btn btn-admin" id="sync-to-firebase-btn">Sync to Firebase</button>
-                <button class="btn btn-admin" id="load-from-firebase-btn">Load from Firebase</button>
-                <button class="btn btn-admin" id="configure-firebase-btn">Firebase Config</button>
-            </div>
-            <table class="stock-table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Product</th>
-                        <th>Category</th>
-                        <th>Price</th>
-                        <th>Stock</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="stock-table-body">
-                    <!-- Stock data will be added by JavaScript -->
-                </tbody>
-            </table>
-            <button class="logout-btn" id="logout-btn">Logout</button>
-        </div>
-
-        <footer>
-            <p>&copy; 2023 TechStore. All rights reserved.</p>
-            <p>Real-time stock management powered by Firebase</p>
-        </footer>
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="card">
+    <h1 style="text-align:center; margin-bottom: 24px;">📀 CD Shop</h1>
+    <div style="margin-bottom: 12px;">
+      <label>Email</label>
+      <input type="email" id="loginEmail" placeholder="email@example.com">
     </div>
+    <div style="margin-bottom: 16px;">
+      <label>Fjalëkalimi</label>
+      <input type="password" id="loginPassword" placeholder="••••••••">
+    </div>
+    <button style="width:100%" onclick="doLogin()" id="loginBtn">Hyr</button>
+    <p id="loginError" class="negative" style="margin-top:12px; font-size:13px; text-align:center;"></p>
+  </div>
+</div>
 
-    <!-- Notification Container -->
-    <div id="notification-container"></div>
+<!-- MAIN APP -->
+<div id="app" class="container hidden">
+  <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <div>
+      <h1>📀 CD Shop Manager</h1>
+      <p class="subtitle">Menaxhimi i shitjeve dhe hyrjeve të mallit • Supabase Cloud</p>
+    </div>
+    <div style="text-align:right;">
+      <div id="userEmail" style="font-size:13px; color:#94a3b8;"></div>
+      <button class="btn-secondary btn-sm" onclick="doLogout()" style="margin-top:6px;">Dil</button>
+    </div>
+  </div>
 
-    <script>
-        // Firebase configuration
-        const DEFAULT_FIREBASE_CONFIG = {
-            apiKey: "AIzaSyBnGUA7AD6Cdp2ICaNf8Yaj6FXOjS2IyBg",
-            authDomain: "cdshopmenager.firebaseapp.com",
-            projectId: "cdshopmenager",
-            storageBucket: "cdshopmenager.firebasestorage.app",
-            messagingSenderId: "115220345473",
-            appId: "1:115220345473:web:c64b5443dff40453b91380",
-            measurementId: "G-JV7CP5C1XW"
-        };
+  <div class="tabs">
+    <button class="tab active" data-tab="dashboard">📊 Përmbledhje</button>
+    <button class="tab" data-tab="sales">💰 Shitje</button>
+    <button class="tab" data-tab="stock">📦 Hyrje Malli</button>
+    <button class="tab" data-tab="products">💿 Produkte</button>
+    <button class="tab" data-tab="workers">👥 Punëtorë</button>
+    <button class="tab" data-tab="reports">📈 Raporte</button>
+  </div>
 
-        let firebaseApp = null;
-        let database = null;
-        let firebaseInitialized = false;
+  <!-- DASHBOARD -->
+  <div class="panel active" id="panel-dashboard">
+    <div class="card">
+      <h2>Raporti i ditës: <span id="todayDate"></span></h2>
+      <div class="grid grid-3" id="statsToday"></div>
+    </div>
+    <div class="card">
+      <h2>Shitjet e fundit</h2>
+      <div id="recentSales"></div>
+    </div>
+  </div>
 
-        // Product data - initialized with existing products
-        let products = [
-            {
-                id: 1,
-                name: "SD CARD 8GB",
-                category: "USB",
-                description: "High-speed USB 3.0 drive with 64GB storage capacity.",
-                price: 13,
-                stock: 9,
-                icon: "fa-usb"
-            },
-            {
-                id: 2,
-                name: "SD CARD 4GB",
-                category: "USB",
-                description: "High-speed USB 3.0 drive with 64GB storage capacity.",
-                price: 10,
-                stock: 7,
-                icon: "fa-usb"
-            },
-            {
-                id: 3,
-                name: "USB 8GB",
-                category: "USB",
-                description: "High-speed USB 3.0 drive with 64GB storage capacity.",
-                price: 13,
-                stock: 2,
-                icon: "fa-usb"
-            },
-            {
-                id: 4,
-                name: "USB 4GB",
-                category: "USB",
-                description: "High-speed USB 3.0 drive with 64GB storage capacity.",
-                price: 8,
-                stock: 36,
-                icon: "fa-usb"
-            },
-            {
-                id: 5,
-                name: "USB 64GB",
-                category: "USB",
-                description: "High-speed USB 3.0 drive with 64GB storage capacity.",
-                price: 25,
-                stock: 8,
-                icon: "fa-usb"
-            },
-            {
-                id: 6,
-                name: "USB 8/16GB",
-                category: "USB",
-                description: "High-speed USB 3.0 drive with 64GB storage capacity.",
-                price: 15,
-                stock: 5,
-                icon: "fa-usb"
-            },
-        ];
+  <!-- SALES -->
+  <div class="panel" id="panel-sales">
+    <div class="card">
+      <h2>➕ Regjistro shitje</h2>
+      <div class="form-row">
+        <div><label>Punëtori</label><select id="saleWorker"></select></div>
+        <div><label>Produkti</label><select id="saleProduct"></select></div>
+        <div><label>Sasia</label><input type="number" id="saleQty" value="1" min="1"></div>
+        <div><label>Çmimi (€)</label><input type="number" id="salePrice" step="0.01" min="0"></div>
+        <div><label>Data</label><input type="date" id="saleDate"></div>
+      </div>
+      <button onclick="addSale()" id="saleBtn">Regjistro shitjen</button>
+    </div>
+    <div class="card">
+      <h2>Shitjet e regjistruara</h2>
+      <div id="salesList"></div>
+    </div>
+  </div>
 
-        // Cart data
-        let cart = [];
+  <!-- STOCK -->
+  <div class="panel" id="panel-stock">
+    <div class="card">
+      <h2>➕ Hyrje mall i re</h2>
+      <div class="form-row">
+        <div><label>Punëtori</label><select id="stockWorker"></select></div>
+        <div><label>Produkti</label><select id="stockProduct"></select></div>
+        <div><label>Sasia</label><input type="number" id="stockQty" value="1" min="1"></div>
+        <div><label>Çmimi blerje (€)</label><input type="number" id="stockCost" step="0.01" min="0"></div>
+        <div><label>Data</label><input type="date" id="stockDate"></div>
+      </div>
+      <button onclick="addStock()">Regjistro hyrjen</button>
+    </div>
+    <div class="card">
+      <h2>Hyrjet e mallit</h2>
+      <div id="stockList"></div>
+    </div>
+  </div>
 
-        // Passwords for admin and stock manager
-        const ADMIN_PASSWORD = "admin123";
-        const STOCK_MANAGER_PASSWORD = "stock123";
+  <!-- PRODUCTS -->
+  <div class="panel" id="panel-products">
+    <div class="card">
+      <h2>➕ Shto produkt</h2>
+      <div class="form-row">
+        <div><label>Emri i CD-së</label><input type="text" id="prodName" placeholder="Album - Artist"></div>
+        <div><label>Kategoria</label><input type="text" id="prodCategory" placeholder="Rock, Pop..."></div>
+        <div><label>Çmimi shitje (€)</label><input type="number" id="prodPrice" step="0.01" min="0"></div>
+      </div>
+      <button onclick="addProduct()">Shto produktin</button>
+    </div>
+    <div class="card">
+      <h2>Lista e produkteve & stoku</h2>
+      <div id="productsList"></div>
+    </div>
+  </div>
 
-        // Current user type (admin or stock manager)
-        let currentUserType = null;
+  <!-- WORKERS -->
+  <div class="panel" id="panel-workers">
+    <div class="card">
+      <h2>➕ Shto punëtor</h2>
+      <div class="form-row">
+        <div><label>Emri</label><input type="text" id="workerName" placeholder="Emri i plotë"></div>
+      </div>
+      <button onclick="addWorker()">Shto punëtorin</button>
+    </div>
+    <div class="card">
+      <h2>Punëtorët</h2>
+      <div id="workersList"></div>
+    </div>
+  </div>
 
-        // DOM elements
-        const usbProductsContainer = document.getElementById('usb-products');
-        const cdProductsContainer = document.getElementById('cd-products');
-        const cartItemsContainer = document.getElementById('cart-items');
-        const cartTotalElement = document.getElementById('cart-total');
-        const adminBtn = document.getElementById('admin-btn');
-        const stockManagerBtn = document.getElementById('stock-manager-btn');
-        const adminLoginModal = document.getElementById('admin-login-modal');
-        const stockLoginModal = document.getElementById('stock-login-modal');
-        const adminPasswordInput = document.getElementById('admin-password-input');
-        const adminLoginBtn = document.getElementById('admin-login-btn');
-        const adminLoginError = document.getElementById('admin-login-error');
-        const passwordInput = document.getElementById('password-input');
-        const loginBtn = document.getElementById('login-btn');
-        const loginError = document.getElementById('login-error');
-        const stockManager = document.getElementById('stock-manager');
-        const stockTableBody = document.getElementById('stock-table-body');
-        const logoutBtn = document.getElementById('logout-btn');
-        const checkoutBtn = document.getElementById('checkout-btn');
-        const addProductModal = document.getElementById('add-product-modal');
-        const addProductBtn = document.getElementById('add-product-btn');
-        const addProductForm = document.getElementById('add-product-form');
-        const cancelAddProductBtn = document.getElementById('cancel-add-product');
-        const exportDataBtn = document.getElementById('export-data-btn');
-        const importDataBtn = document.getElementById('import-data-btn');
-        const syncToFirebaseBtn = document.getElementById('sync-to-firebase-btn');
-        const loadFromFirebaseBtn = document.getElementById('load-from-firebase-btn');
-        const configureFirebaseBtn = document.getElementById('configure-firebase-btn');
-        const firebaseConfigModal = document.getElementById('firebase-config-modal');
-        const firebaseConfigForm = document.getElementById('firebase-config-form');
-        const cancelFirebaseConfigBtn = document.getElementById('cancel-firebase-config');
-        const notificationContainer = document.getElementById('notification-container');
-        const connectionStatus = document.getElementById('connection-status');
-        const dbStatus = document.getElementById('db-status');
-        const firebaseStatus = document.getElementById('firebase-status');
-        const firebaseSyncIndicator = document.getElementById('firebase-sync-indicator');
+  <!-- REPORTS -->
+  <div class="panel" id="panel-reports">
+    <div class="card">
+      <h2>📈 Raporti Ditor</h2>
+      <div class="form-row">
+        <div><label>Zgjidh datën</label><input type="date" id="reportDate" onchange="loadDailyReport()"></div>
+      </div>
+    </div>
+    <div id="dailyReport"></div>
 
-        // Show notification
-        function showNotification(message, type = 'info', duration = 3000) {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            notificationContainer.appendChild(notification);
-            
-            // Trigger animation
-            setTimeout(() => notification.classList.add('show'), 10);
-            
-            // Remove notification after duration
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => notification.remove(), 300);
-            }, duration);
-        }
+    <div class="card">
+      <h2>📊 Raporti i periudhës</h2>
+      <div class="form-row">
+        <div><label>Nga data</label><input type="date" id="rangeFrom"></div>
+        <div><label>Deri data</label><input type="date" id="rangeTo"></div>
+        <button onclick="loadRangeReport()" style="align-self: flex-end;">Gjenero</button>
+      </div>
+    </div>
+    <div id="rangeReport"></div>
+  </div>
+</div>
 
-        // Initialize Firebase
-        function initializeFirebase(config) {
-            try {
-                firebaseApp = firebase.initializeApp(config);
-                database = firebase.database();
-                firebaseInitialized = true;
-                
-                // Update status
-                connectionStatus.textContent = "(Connected)";
-                connectionStatus.style.color = "var(--success)";
-                dbStatus.textContent = "✅ Connected to Firebase database";
-                dbStatus.className = "connection-status connected";
-                firebaseStatus.textContent = "Firebase: Connected";
-                firebaseStatus.className = "connection-status connected";
-                
-                showNotification("Connected to Firebase database", "success");
-                
-                // Listen for real-time updates
-                listenForStockUpdates();
-                
-                return true;
-            } catch (error) {
-                console.error("Firebase initialization error:", error);
-                connectionStatus.textContent = "(Offline)";
-                connectionStatus.style.color = "var(--danger)";
-                dbStatus.textContent = "⚠️ Firebase connection failed. Using local storage.";
-                dbStatus.className = "connection-status disconnected";
-                firebaseStatus.textContent = "Firebase: Connection failed";
-                firebaseStatus.className = "connection-status disconnected";
-                showNotification("Firebase connection failed. Using local storage.", "error");
-                return false;
-            }
-        }
+<div id="toast"></div>
 
-        // Listen for real-time stock updates from Firebase
-        function listenForStockUpdates() {
-            if (!firebaseInitialized || !database) return;
-            
-            try {
-                const productsRef = database.ref('products');
-                
-                productsRef.on('value', (snapshot) => {
-                    const firebaseProducts = snapshot.val();
-                    
-                    if (firebaseProducts) {
-                        // Convert Firebase object to array
-                        const newProducts = Object.values(firebaseProducts);
-                        
-                        // Update local products
-                        products = newProducts;
-                        
-                        // Update UI
-                        renderProducts();
-                        if (stockManager.style.display === 'block') {
-                            renderStockManager();
-                        }
-                        
-                        // Show sync indicator
-                        firebaseSyncIndicator.innerHTML = '<i class="fas fa-sync-alt" style="color: var(--accent); margin-left: 10px;"></i>';
-                        setTimeout(() => {
-                            firebaseSyncIndicator.innerHTML = '';
-                        }, 2000);
-                        
-                        // Show notification if not from our own action
-                        if (!window.ignoreFirebaseUpdate) {
-                            showNotification("Stock updated from cloud", "info", 1500);
-                        }
-                        window.ignoreFirebaseUpdate = false;
-                    }
-                }, (error) => {
-                    console.error("Firebase read failed:", error);
-                    showNotification("Failed to sync with Firebase", "error");
-                });
-            } catch (error) {
-                console.error("Error setting up Firebase listener:", error);
-            }
-        }
+<script>
+// ==================== CONFIG ====================
+// Replace with your Supabase Project URL and anon key
+const SUPABASE_URL = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoa2FxdHBmaGN5YWp5c2xudmxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3Mzc1OTQsImV4cCI6MjA5MDMxMzU5NH0.oaObjuascv482VGXD7p-loOZY048mt1LbwJlWcZyCSE';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJoa2FxdHBmaGN5YWp5c2xudmxuIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDczNzU5NCwiZXhwIjoyMDkwMzEzNTk0fQ.qYVlByKS9csIjAWFsD0yaqDBPnzBOw-KeDRKFSo6GCY';
 
-        // Save products to Firebase
-        async function saveProductsToFirebase() {
-            if (!firebaseInitialized || !database) {
-                showNotification("Firebase not configured", "error");
-                return false;
-            }
-            
-            try {
-                // Convert array to object with IDs as keys
-                const productsObject = {};
-                products.forEach(product => {
-                    productsObject[product.id] = product;
-                });
-                
-                // Set the flag to ignore our own update
-                window.ignoreFirebaseUpdate = true;
-                
-                // Save to Firebase
-                await database.ref('products').set(productsObject);
-                
-                showNotification("Products synced to Firebase", "success");
-                return true;
-            } catch (error) {
-                console.error("Firebase save error:", error);
-                showNotification("Failed to sync with Firebase", "error");
-                return false;
-            }
-        }
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Load products from Firebase
-        async function loadProductsFromFirebase() {
-            if (!firebaseInitialized || !database) {
-                showNotification("Firebase not configured", "error");
-                return false;
-            }
-            
-            try {
-                const snapshot = await database.ref('products').once('value');
-                const firebaseProducts = snapshot.val();
-                
-                if (firebaseProducts) {
-                    // Convert Firebase object to array
-                    const newProducts = Object.values(firebaseProducts);
-                    
-                    // Update local products
-                    products = newProducts;
-                    
-                    // Save to local storage as backup
-                    saveProductsToStorage();
-                    
-                    // Update UI
-                    renderProducts();
-                    if (stockManager.style.display === 'block') {
-                        renderStockManager();
-                    }
-                    
-                    showNotification("Products loaded from Firebase", "success");
-                    return true;
-                } else {
-                    showNotification("No products found in Firebase", "info");
-                    return false;
-                }
-            } catch (error) {
-                console.error("Firebase load error:", error);
-                showNotification("Failed to load from Firebase", "error");
-                return false;
-            }
-        }
+let currentUser = null;
 
-        // Save products to localStorage
-        function saveProductsToStorage() {
-            try {
-                localStorage.setItem('techstore_products', JSON.stringify(products));
-                localStorage.setItem('techstore_last_sync', new Date().toISOString());
-            } catch (e) {
-                console.error('Failed to save products to localStorage', e);
-            }
-        }
+// ==================== HELPERS ====================
+function toast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (isError ? ' error' : '');
+  setTimeout(() => t.className = '', 2200);
+}
+function today() { return new Date().toISOString().split('T')[0]; }
+function fmt(n) { return Number(n || 0).toFixed(2); }
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+function setLoading(btn, loading) {
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.dataset.text = btn.dataset.text || btn.textContent;
+  btn.textContent = loading ? 'Duke procesuar...' : btn.dataset.text;
+}
 
-        // Load products from localStorage
-        function loadProductsFromStorage() {
-            try {
-                const savedProducts = localStorage.getItem('techstore_products');
-                if (savedProducts) {
-                    const parsedProducts = JSON.parse(savedProducts);
-                    if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
-                        products = parsedProducts;
-                        return true;
-                    }
-                }
-            } catch (e) {
-                console.error('Failed to load products from localStorage', e);
-            }
-            return false;
-        }
+// ==================== AUTH ====================
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const err = document.getElementById('loginError');
+  err.textContent = '';
+  setLoading(document.getElementById('loginBtn'), true);
 
-        // Generate unique ID for products
-        function generateProductId() {
-            return products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-        }
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-        // Initialize the shop
-        async function initShop() {
-            // Load Firebase configuration
-            let firebaseConfig = DEFAULT_FIREBASE_CONFIG;
-            
-            // Try to load saved config
-            try {
-                const savedConfig = localStorage.getItem('techstore_firebase_config');
-                if (savedConfig) {
-                    firebaseConfig = JSON.parse(savedConfig);
-                }
-            } catch (e) {
-                console.error('Failed to load Firebase config from localStorage', e);
-            }
-            
-            // Initialize Firebase
-            const firebaseSuccess = initializeFirebase(firebaseConfig);
-            
-            // Load products (from Firebase if available, otherwise from localStorage)
-            if (firebaseSuccess) {
-                const loaded = await loadProductsFromFirebase();
-                if (!loaded) {
-                    // If Firebase doesn't have data, try localStorage
-                    const fromStorage = loadProductsFromStorage();
-                    if (fromStorage) {
-                        // Sync local data to Firebase
-                        setTimeout(() => saveProductsToFirebase(), 1000);
-                    }
-                }
-            } else {
-                // If Firebase failed, load from localStorage
-                loadProductsFromStorage();
-            }
-            
-            renderProducts();
-            updateCartDisplay();
-            setupEventListeners();
-        }
+  setLoading(document.getElementById('loginBtn'), false);
+  if (error) { err.textContent = error.message; return; }
+  currentUser = data.user;
+  showApp();
+}
 
-        // Setup event listeners
-        function setupEventListeners() {
-            // Admin login
-            adminBtn.addEventListener('click', function() {
-                adminLoginModal.style.display = 'flex';
-                adminPasswordInput.value = '';
-                adminLoginError.style.display = 'none';
-            });
+async function doLogout() {
+  await supabaseClient.auth.signOut();
+  currentUser = null;
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+}
 
-            adminLoginBtn.addEventListener('click', function() {
-                if (adminPasswordInput.value === ADMIN_PASSWORD) {
-                    adminLoginModal.style.display = 'none';
-                    stockManager.style.display = 'block';
-                    currentUserType = 'admin';
-                    renderStockManager();
-                    showNotification('Admin login successful', 'success');
-                } else {
-                    adminLoginError.style.display = 'block';
-                }
-            });
+function showApp() {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('app').classList.remove('hidden');
+  document.getElementById('userEmail').textContent = currentUser?.email || '';
+  document.getElementById('todayDate').textContent = today();
+  document.getElementById('saleDate').value = today();
+  document.getElementById('stockDate').value = today();
+  document.getElementById('reportDate').value = today();
+  refreshAll();
+  setupRealtime();
+}
 
-            // Stock manager login
-            stockManagerBtn.addEventListener('click', function() {
-                stockLoginModal.style.display = 'flex';
-                passwordInput.value = '';
-                loginError.style.display = 'none';
-            });
+// ==================== DATA LOADERS ====================
+async function fetchWorkers() {
+  const { data, error } = await supabaseClient.from('workers').select('*').order('id');
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
 
-            loginBtn.addEventListener('click', function() {
-                if (passwordInput.value === STOCK_MANAGER_PASSWORD) {
-                    stockLoginModal.style.display = 'none';
-                    stockManager.style.display = 'block';
-                    currentUserType = 'stock';
-                    renderStockManager();
-                    showNotification('Stock manager login successful', 'success');
-                } else {
-                    loginError.style.display = 'block';
-                }
-            });
+async function fetchProducts() {
+  const { data, error } = await supabaseClient.from('products').select('*').order('name');
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
 
-            // Close modals when clicking outside
-            adminLoginModal.addEventListener('click', function(e) {
-                if (e.target === adminLoginModal) {
-                    adminLoginModal.style.display = 'none';
-                }
-            });
+async function fetchSales(limit = 100) {
+  const { data, error } = await supabaseClient
+    .from('sales')
+    .select(`*, workers(name), products(name)`)
+    .order('date', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(limit);
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
 
-            stockLoginModal.addEventListener('click', function(e) {
-                if (e.target === stockLoginModal) {
-                    stockLoginModal.style.display = 'none';
-                }
-            });
+async function fetchStock(limit = 100) {
+  const { data, error } = await supabaseClient
+    .from('stock_entries')
+    .select(`*, workers(name), products(name)`)
+    .order('date', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(limit);
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
 
-            addProductModal.addEventListener('click', function(e) {
-                if (e.target === addProductModal) {
-                    addProductModal.style.display = 'none';
-                }
-            });
+async function fetchSalesByDate(date) {
+  const { data, error } = await supabaseClient
+    .from('sales')
+    .select(`*, workers(name), products(name)`)
+    .eq('date', date);
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
 
-            firebaseConfigModal.addEventListener('click', function(e) {
-                if (e.target === firebaseConfigModal) {
-                    firebaseConfigModal.style.display = 'none';
-                }
-            });
+async function fetchStockByDate(date) {
+  const { data, error } = await supabaseClient
+    .from('stock_entries')
+    .select(`*, workers(name), products(name)`)
+    .eq('date', date);
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
 
-            // Logout from stock manager
-            logoutBtn.addEventListener('click', function() {
-                stockManager.style.display = 'none';
-                currentUserType = null;
-                showNotification('Logged out successfully', 'info');
-            });
+// ==================== RENDER ====================
+async function refreshAll() {
+  await Promise.all([
+    loadWorkersDropdowns(),
+    loadProductsDropdowns(),
+    renderWorkers(),
+    renderProducts(),
+    renderSales(),
+    renderStock(),
+    renderDashboard(),
+    loadDailyReport()
+  ]);
+}
 
-            // Checkout process
-            checkoutBtn.addEventListener('click', function() {
-                checkout();
-            });
+async function loadWorkersDropdowns() {
+  const workers = await fetchWorkers();
+  const opts = workers.map(w => `<option value="${w.id}">${escapeHtml(w.name)}</option>`).join('');
+  ['saleWorker', 'stockWorker'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts;
+  });
+}
 
-            // Add product button
-            addProductBtn.addEventListener('click', function() {
-                addProductModal.style.display = 'flex';
-                addProductForm.reset();
-                document.getElementById('product-icon').value = 'fa-box';
-            });
+async function loadProductsDropdowns() {
+  const products = await fetchProducts();
+  const opts = products.length
+    ? products.map(p => `<option value="${p.id}">${escapeHtml(p.name)} (stok: ${p.stock})</option>`).join('')
+    : '<option value="">-- Shto produkt fillimisht --</option>';
+  ['saleProduct', 'stockProduct'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = opts;
+  });
+}
 
-            // Cancel add product
-            cancelAddProductBtn.addEventListener('click', function() {
-                addProductModal.style.display = 'none';
-            });
+async function renderWorkers() {
+  const workers = await fetchWorkers();
+  const el = document.getElementById('workersList');
+  if (!workers.length) { el.innerHTML = '<div class="empty">Nuk ka punëtorë</div>'; return; }
+  el.innerHTML = `<table><thead><tr><th>ID</th><th>Emri</th><th>Veprime</th></tr></thead><tbody>
+    ${workers.map(w => `<tr>
+      <td>${w.id}</td>
+      <td>${escapeHtml(w.name)}</td>
+      <td><button class="btn-danger btn-sm" onclick="deleteWorker(${w.id})">Fshi</button></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
 
-            // Add product form submission
-            addProductForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                const newProduct = {
-                    id: generateProductId(),
-                    name: document.getElementById('product-name').value,
-                    category: document.getElementById('product-category').value,
-                    description: document.getElementById('product-description').value,
-                    price: parseFloat(document.getElementById('product-price').value),
-                    stock: parseInt(document.getElementById('product-stock').value),
-                    icon: document.getElementById('product-icon').value || 'fa-box'
-                };
-                
-                products.push(newProduct);
-                saveProductsToStorage();
-                renderProducts();
-                renderStockManager();
-                addProductModal.style.display = 'none';
-                
-                // Sync to Firebase
-                await saveProductsToFirebase();
-                
-                showNotification(`Product "${newProduct.name}" added successfully!`, 'success');
-            });
+async function renderProducts() {
+  const products = await fetchProducts();
+  const el = document.getElementById('productsList');
+  if (!products.length) { el.innerHTML = '<div class="empty">Nuk ka produkte. Shto një CD.</div>'; return; }
+  el.innerHTML = `<table><thead><tr><th>Emri</th><th>Kategoria</th><th>Çmimi</th><th>Stoku</th><th>Veprime</th></tr></thead><tbody>
+    ${products.map(p => `<tr>
+      <td>${escapeHtml(p.name)}</td>
+      <td>${escapeHtml(p.category || '')}</td>
+      <td>€${fmt(p.price)}</td>
+      <td>${p.stock < 5 ? `<span class="negative">${p.stock}</span>` : p.stock}</td>
+      <td><button class="btn-danger btn-sm" onclick="deleteProduct(${p.id})">Fshi</button></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
 
-            // Export product data
-            exportDataBtn.addEventListener('click', function() {
-                const dataStr = JSON.stringify(products, null, 2);
-                const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-                
-                const exportFileDefaultName = `techstore-products-${new Date().toISOString().split('T')[0]}.json`;
-                
-                const linkElement = document.createElement('a');
-                linkElement.setAttribute('href', dataUri);
-                linkElement.setAttribute('download', exportFileDefaultName);
-                linkElement.click();
-                
-                showNotification('Product data exported successfully', 'success');
-            });
+async function renderSales() {
+  const sales = await fetchSales();
+  const el = document.getElementById('salesList');
+  if (!sales.length) { el.innerHTML = '<div class="empty">Nuk ka shitje të regjistruara</div>'; return; }
+  el.innerHTML = `<table><thead><tr>
+    <th>Data</th><th>Punëtori</th><th>Produkti</th><th>Sasia</th><th>Çmimi</th><th>Totali</th><th></th>
+  </tr></thead><tbody>
+    ${sales.map(s => `<tr>
+      <td>${s.date}</td>
+      <td>${escapeHtml(s.workers?.name || '?')}</td>
+      <td>${escapeHtml(s.products?.name || '?')}</td>
+      <td>${s.qty}</td>
+      <td>€${fmt(s.price)}</td>
+      <td><b>€${fmt(s.qty * s.price)}</b></td>
+      <td><button class="btn-danger btn-sm" onclick="deleteSale(${s.id})">✕</button></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
 
-            // Import product data
-            importDataBtn.addEventListener('click', function() {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.json';
-                
-                input.onchange = async function(e) {
-                    const file = e.target.files[0];
-                    const reader = new FileReader();
-                    
-                    reader.onload = async function(event) {
-                        try {
-                            const importedProducts = JSON.parse(event.target.result);
-                            
-                            if (Array.isArray(importedProducts)) {
-                                // Validate imported products
-                                const validProducts = importedProducts.filter(p => 
-                                    p.id && p.name && p.category && p.price && typeof p.stock === 'number'
-                                );
-                                
-                                if (validProducts.length > 0) {
-                                    products = validProducts;
-                                    saveProductsToStorage();
-                                    renderProducts();
-                                    renderStockManager();
-                                    
-                                    // Sync to Firebase
-                                    await saveProductsToFirebase();
-                                    
-                                    showNotification(`${validProducts.length} products imported successfully`, 'success');
-                                } else {
-                                    showNotification('Invalid product data format', 'error');
-                                }
-                            } else {
-                                showNotification('Invalid file format. Expected an array of products.', 'error');
-                            }
-                        } catch (error) {
-                            showNotification('Error parsing JSON file', 'error');
-                        }
-                    };
-                    
-                    reader.readAsText(file);
-                };
-                
-                input.click();
-            });
+async function renderStock() {
+  const rows = await fetchStock();
+  const el = document.getElementById('stockList');
+  if (!rows.length) { el.innerHTML = '<div class="empty">Nuk ka hyrje malli</div>'; return; }
+  el.innerHTML = `<table><thead><tr>
+    <th>Data</th><th>Punëtori</th><th>Produkti</th><th>Sasia</th><th>Kosto</th><th>Totali</th><th></th>
+  </tr></thead><tbody>
+    ${rows.map(s => `<tr>
+      <td>${s.date}</td>
+      <td>${escapeHtml(s.workers?.name || '?')}</td>
+      <td>${escapeHtml(s.products?.name || '?')}</td>
+      <td><span class="badge badge-in">+${s.qty}</span></td>
+      <td>€${fmt(s.cost)}</td>
+      <td>€${fmt(s.qty * s.cost)}</td>
+      <td><button class="btn-danger btn-sm" onclick="deleteStock(${s.id})">✕</button></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
 
-            // Sync to Firebase button
-            syncToFirebaseBtn.addEventListener('click', async function() {
-                const success = await saveProductsToFirebase();
-                if (success) {
-                    showNotification('Products synced to Firebase', 'success');
-                }
-            });
+async function renderDashboard() {
+  const d = today();
+  const sales = await fetchSalesByDate(d);
+  const totalSales = sales.reduce((a, s) => a + s.qty * s.price, 0);
+  const totalQty = sales.reduce((a, s) => a + s.qty, 0);
+  const workers = await fetchWorkers();
 
-            // Load from Firebase button
-            loadFromFirebaseBtn.addEventListener('click', async function() {
-                const success = await loadProductsFromFirebase();
-                if (success) {
-                    showNotification('Products loaded from Firebase', 'success');
-                }
-            });
+  let html = `
+    <div class="stat total">
+      <div class="stat-label">Totali i ditës</div>
+      <div class="stat-value">€${fmt(totalSales)}</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:4px;">${totalQty} CD të shitura</div>
+    </div>`;
 
-            // Configure Firebase button
-            configureFirebaseBtn.addEventListener('click', function() {
-                firebaseConfigModal.style.display = 'flex';
-                
-                // Load current config if exists
-                try {
-                    const savedConfig = localStorage.getItem('techstore_firebase_config');
-                    if (savedConfig) {
-                        const config = JSON.parse(savedConfig);
-                        document.getElementById('firebase-api-key').value = config.apiKey || '';
-                        document.getElementById('firebase-auth-domain').value = config.authDomain || '';
-                        document.getElementById('firebase-project-id').value = config.projectId || '';
-                        document.getElementById('firebase-storage-bucket').value = config.storageBucket || '';
-                        document.getElementById('firebase-messaging-sender-id').value = config.messagingSenderId || '';
-                        document.getElementById('firebase-app-id').value = config.appId || '';
-                    } else {
-                        // Use default config
-                        document.getElementById('firebase-api-key').value = DEFAULT_FIREBASE_CONFIG.apiKey;
-                        document.getElementById('firebase-auth-domain').value = DEFAULT_FIREBASE_CONFIG.authDomain;
-                        document.getElementById('firebase-project-id').value = DEFAULT_FIREBASE_CONFIG.projectId;
-                        document.getElementById('firebase-storage-bucket').value = DEFAULT_FIREBASE_CONFIG.storageBucket;
-                        document.getElementById('firebase-messaging-sender-id').value = DEFAULT_FIREBASE_CONFIG.messagingSenderId;
-                        document.getElementById('firebase-app-id').value = DEFAULT_FIREBASE_CONFIG.appId;
-                    }
-                } catch (e) {
-                    console.error('Error loading Firebase config', e);
-                }
-            });
+  workers.forEach((w, i) => {
+    const ws = sales.filter(s => s.worker_id === w.id);
+    const amount = ws.reduce((a, s) => a + s.qty * s.price, 0);
+    const qty = ws.reduce((a, s) => a + s.qty, 0);
+    html += `
+      <div class="stat worker${i + 1}">
+        <div class="stat-label">${escapeHtml(w.name)}</div>
+        <div class="stat-value">€${fmt(amount)}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:4px;">${qty} shitje</div>
+      </div>`;
+  });
 
-            // Cancel Firebase config
-            cancelFirebaseConfigBtn.addEventListener('click', function() {
-                firebaseConfigModal.style.display = 'none';
-            });
+  document.getElementById('statsToday').innerHTML = html;
 
-            // Save Firebase configuration
-            firebaseConfigForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                const newConfig = {
-                    apiKey: document.getElementById('firebase-api-key').value,
-                    authDomain: document.getElementById('firebase-auth-domain').value,
-                    projectId: document.getElementById('firebase-project-id').value,
-                    storageBucket: document.getElementById('firebase-storage-bucket').value,
-                    messagingSenderId: document.getElementById('firebase-messaging-sender-id').value,
-                    appId: document.getElementById('firebase-app-id').value
-                };
-                
-                // Save config to localStorage
-                localStorage.setItem('techstore_firebase_config', JSON.stringify(newConfig));
-                
-                // Reinitialize Firebase
-                const success = initializeFirebase(newConfig);
-                
-                if (success) {
-                    firebaseConfigModal.style.display = 'none';
-                    showNotification('Firebase configuration saved and connected', 'success');
-                    
-                    // Sync products to Firebase
-                    setTimeout(() => saveProductsToFirebase(), 500);
-                }
-            });
-        }
+  const recent = await fetchSales(10);
+  const el = document.getElementById('recentSales');
+  if (!recent.length) {
+    el.innerHTML = '<div class="empty">Nuk ka shitje</div>';
+  } else {
+    el.innerHTML = `<table><thead><tr><th>Data</th><th>Punëtori</th><th>Produkti</th><th>Sasia</th><th>Totali</th></tr></thead><tbody>
+      ${recent.map(s => `<tr>
+        <td>${s.date}</td>
+        <td>${escapeHtml(s.workers?.name || '?')}</td>
+        <td>${escapeHtml(s.products?.name || '?')}</td>
+        <td>${s.qty}</td>
+        <td><b>€${fmt(s.qty * s.price)}</b></td>
+      </tr>`).join('')}
+    </tbody></table>`;
+  }
+}
 
-        // Render products based on category
-        function renderProducts() {
-            // Clear containers
-            usbProductsContainer.innerHTML = '';
-            cdProductsContainer.innerHTML = '';
+// ==================== ACTIONS ====================
+async function addWorker() {
+  const name = document.getElementById('workerName').value.trim();
+  if (!name) return toast('Shkruaj emrin', true);
+  const { error } = await supabaseClient.from('workers').insert({ name });
+  if (error) return toast(error.message, true);
+  document.getElementById('workerName').value = '';
+  toast('Punëtori u shtua');
+  refreshAll();
+}
 
-            // Render each product
-            products.forEach(product => {
-                const productCard = document.createElement('div');
-                productCard.className = 'product-card';
-                
-                // Determine stock status class
-                let stockClass = 'stock-high';
-                if (product.stock < 5) stockClass = 'stock-low';
-                if (product.stock === 0) stockClass = 'stock-out';
-                
-                productCard.innerHTML = `
-                    <div class="product-image">
-                        <i class="fas ${product.icon}"></i>
-                    </div>
-                    <div class="product-info">
-                        <span class="product-category">${product.category}</span>
-                        <h3 class="product-name">${product.name}</h3>
-                        <p class="product-description">${product.description}</p>
-                        <div class="product-price">$${product.price.toFixed(2)}</div>
-                        <div class="product-stock ${stockClass}">${product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}</div>
-                        <button class="add-to-cart" ${product.stock === 0 ? 'disabled' : ''} data-id="${product.id}">
-                            ${product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
-                        </button>
-                    </div>
-                `;
-                
-                // Add to appropriate container
-                if (product.category === 'USB') {
-                    usbProductsContainer.appendChild(productCard);
-                } else if (product.category === 'CD') {
-                    cdProductsContainer.appendChild(productCard);
-                } else {
-                    // For other categories, add to both or create separate section
-                    usbProductsContainer.appendChild(productCard);
-                }
-            });
+async function deleteWorker(id) {
+  if (!confirm('Fshi punëtorin?')) return;
+  const { error } = await supabaseClient.from('workers').delete().eq('id', id);
+  if (error) return toast(error.message, true);
+  toast('U fshi');
+  refreshAll();
+}
 
-            // Add event listeners to add to cart buttons
-            document.querySelectorAll('.add-to-cart').forEach(button => {
-                button.addEventListener('click', function() {
-                    const productId = parseInt(this.getAttribute('data-id'));
-                    addToCart(productId);
-                });
-            });
-        }
+async function addProduct() {
+  const name = document.getElementById('prodName').value.trim();
+  const category = document.getElementById('prodCategory').value.trim();
+  const price = parseFloat(document.getElementById('prodPrice').value) || 0;
+  if (!name) return toast('Shkruaj emrin', true);
+  const { error } = await supabaseClient.from('products').insert({ name, category, price, stock: 0 });
+  if (error) return toast(error.message, true);
+  document.getElementById('prodName').value = '';
+  document.getElementById('prodCategory').value = '';
+  document.getElementById('prodPrice').value = '';
+  toast('Produkti u shtua');
+  refreshAll();
+}
 
-        // Add product to cart
-        function addToCart(productId) {
-            const product = products.find(p => p.id === productId);
-            
-            if (!product || product.stock === 0) return;
-            
-            // Check if product is already in cart
-            const cartItem = cart.find(item => item.id === productId);
-            
-            if (cartItem) {
-                // If already in cart, increase quantity if stock allows
-                if (cartItem.quantity < product.stock) {
-                    cartItem.quantity++;
-                    showNotification(`Added another ${product.name} to cart`, 'info', 1500);
-                } else {
-                    showNotification(`Only ${product.stock} units of ${product.name} available!`, 'error');
-                    return;
-                }
-            } else {
-                // Add new item to cart
-                cart.push({
-                    id: product.id,
-                    name: product.name,
-                    price: product.price,
-                    quantity: 1
-                });
-                showNotification(`${product.name} added to cart`, 'success', 1500);
-            }
-            
-            updateCartDisplay();
-        }
+async function deleteProduct(id) {
+  if (!confirm('Fshi produktin?')) return;
+  const { error } = await supabaseClient.from('products').delete().eq('id', id);
+  if (error) return toast(error.message, true);
+  toast('U fshi');
+  refreshAll();
+}
 
-        // Update cart display
-        function updateCartDisplay() {
-            // Clear cart items
-            cartItemsContainer.innerHTML = '';
-            
-            let total = 0;
-            
-            // Add each cart item
-            cart.forEach(item => {
-                const itemTotal = item.price * item.quantity;
-                total += itemTotal;
-                
-                const cartItemElement = document.createElement('div');
-                cartItemElement.className = 'cart-item';
-                cartItemElement.innerHTML = `
-                    <span>${item.name} x${item.quantity}</span>
-                    <span>$${itemTotal.toFixed(2)}</span>
-                `;
-                
-                cartItemsContainer.appendChild(cartItemElement);
-            });
-            
-            // Update total
-            cartTotalElement.textContent = `Total: $${total.toFixed(2)}`;
-            
-            // Show empty message if cart is empty
-            if (cart.length === 0) {
-                cartItemsContainer.innerHTML = '<p>Your cart is empty</p>';
-            }
-        }
+async function addSale() {
+  const worker_id = parseInt(document.getElementById('saleWorker').value);
+  const product_id = parseInt(document.getElementById('saleProduct').value);
+  const qty = parseInt(document.getElementById('saleQty').value);
+  const price = parseFloat(document.getElementById('salePrice').value);
+  const date = document.getElementById('saleDate').value;
 
-        // Render stock manager table
-        function renderStockManager() {
-            stockTableBody.innerHTML = '';
-            
-            products.forEach(product => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${product.id}</td>
-                    <td>${product.name}</td>
-                    <td>${product.category}</td>
-                    <td>$${product.price.toFixed(2)}</td>
-                    <td>${product.stock}</td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="update-stock" data-id="${product.id}">Update Stock</button>
-                            ${currentUserType === 'admin' ? `
-                                <button class="edit-product" data-id="${product.id}">Edit</button>
-                                <button class="delete-product" data-id="${product.id}">Delete</button>
-                            ` : ''}
-                        </div>
-                    </td>
-                `;
-                
-                stockTableBody.appendChild(row);
-            });
-            
-            // Add event listeners to update stock buttons
-            document.querySelectorAll('.update-stock').forEach(button => {
-                button.addEventListener('click', async function() {
-                    const productId = parseInt(this.getAttribute('data-id'));
-                    const product = products.find(p => p.id === productId);
-                    const newStock = prompt(`Enter new stock quantity for ${product.name}:`, product.stock);
-                    
-                    if (newStock !== null && !isNaN(newStock) && newStock >= 0) {
-                        product.stock = parseInt(newStock);
-                        saveProductsToStorage();
-                        renderStockManager();
-                        renderProducts();
-                        updateCartDisplay();
-                        
-                        // Sync to Firebase
-                        await saveProductsToFirebase();
-                        
-                        showNotification(`Stock updated for ${product.name}`, 'success');
-                    }
-                });
-            });
-            
-            // Add event listeners to edit product buttons (admin only)
-            document.querySelectorAll('.edit-product').forEach(button => {
-                button.addEventListener('click', async function() {
-                    const productId = parseInt(this.getAttribute('data-id'));
-                    editProduct(productId);
-                });
-            });
-            
-            // Add event listeners to delete product buttons (admin only)
-            document.querySelectorAll('.delete-product').forEach(button => {
-                button.addEventListener('click', async function() {
-                    const productId = parseInt(this.getAttribute('data-id'));
-                    deleteProduct(productId);
-                });
-            });
-        }
+  if (!worker_id || !product_id || !qty || isNaN(price)) return toast('Plotëso të gjitha fushat', true);
+  if (qty <= 0) return toast('Sasia duhet > 0', true);
 
-        // Edit product (admin only)
-        function editProduct(productId) {
-            const product = products.find(p => p.id === productId);
-            
-            // Create edit modal
-            const editModal = document.createElement('div');
-            editModal.className = 'modal';
-            editModal.style.display = 'flex';
-            
-            editModal.innerHTML = `
-                <div class="modal-content">
-                    <h2>Edit Product</h2>
-                    <form id="edit-product-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Product Name</label>
-                                <input type="text" class="form-control" id="edit-product-name" value="${product.name}" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Category</label>
-                                <select class="form-control" id="edit-product-category" required>
-                                    <option value="USB" ${product.category === 'USB' ? 'selected' : ''}>USB Drive</option>
-                                    <option value="CD" ${product.category === 'CD' ? 'selected' : ''}>CD/DVD</option>
-                                    <option value="Other" ${product.category === 'Other' ? 'selected' : ''}>Other</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Description</label>
-                            <textarea class="form-control" id="edit-product-description" rows="3" required>${product.description}</textarea>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">Price ($)</label>
-                                <input type="number" class="form-control" id="edit-product-price" step="0.01" min="0" value="${product.price}" required>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Stock</label>
-                                <input type="number" class="form-control" id="edit-product-stock" min="0" value="${product.stock}" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Icon Class (FontAwesome)</label>
-                            <input type="text" class="form-control" id="edit-product-icon" value="${product.icon}">
-                        </div>
-                        <div class="form-group" style="display: flex; gap: 10px;">
-                            <button type="submit" class="btn" style="flex: 1;">Save Changes</button>
-                            <button type="button" class="btn btn-admin" id="cancel-edit-product" style="flex: 1;">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            `;
-            
-            document.body.appendChild(editModal);
-            
-            // Handle form submission
-            editModal.querySelector('#edit-product-form').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                
-                product.name = document.getElementById('edit-product-name').value;
-                product.category = document.getElementById('edit-product-category').value;
-                product.description = document.getElementById('edit-product-description').value;
-                product.price = parseFloat(document.getElementById('edit-product-price').value);
-                product.stock = parseInt(document.getElementById('edit-product-stock').value);
-                product.icon = document.getElementById('edit-product-icon').value || 'fa-box';
-                
-                saveProductsToStorage();
-                renderProducts();
-                renderStockManager();
-                editModal.remove();
-                
-                // Sync to Firebase
-                await saveProductsToFirebase();
-                
-                showNotification(`Product "${product.name}" updated successfully!`, 'success');
-            });
-            
-            // Handle cancel button
-            editModal.querySelector('#cancel-edit-product').addEventListener('click', function() {
-                editModal.remove();
-            });
-            
-            // Close modal when clicking outside
-            editModal.addEventListener('click', function(e) {
-                if (e.target === editModal) {
-                    editModal.remove();
-                }
-            });
-        }
+  // Check stock
+  const { data: prod, error: prodErr } = await supabaseClient
+    .from('products').select('stock, name').eq('id', product_id).single();
+  if (prodErr) return toast(prodErr.message, true);
+  if (prod.stock < qty) return toast(`Stok i pamjaftueshëm! Ka vetëm ${prod.stock}`, true);
 
-        // Delete product (admin only)
-        async function deleteProduct(productId) {
-            const product = products.find(p => p.id === productId);
-            
-            if (confirm(`Are you sure you want to delete "${product.name}"? This action cannot be undone.`)) {
-                products = products.filter(p => p.id !== productId);
-                saveProductsToStorage();
-                renderProducts();
-                renderStockManager();
-                
-                // Sync to Firebase
-                await saveProductsToFirebase();
-                
-                showNotification(`Product "${product.name}" deleted successfully`, 'info');
-            }
-        }
+  setLoading(document.getElementById('saleBtn'), true);
 
-        // Checkout process
-        async function checkout() {
-            if (cart.length === 0) {
-                showNotification('Your cart is empty!', 'error');
-                return;
-            }
-            
-            // Check if all items are still in stock
-            let canCheckout = true;
-            let outOfStockItems = [];
-            
-            cart.forEach(item => {
-                const product = products.find(p => p.id === item.id);
-                if (product.stock < item.quantity) {
-                    canCheckout = false;
-                    outOfStockItems.push(product.name);
-                }
-            });
-            
-            if (!canCheckout) {
-                showNotification(`The following items don't have enough stock: ${outOfStockItems.join(', ')}`, 'error');
-                return;
-            }
-            
-            // Process checkout
-            cart.forEach(item => {
-                const product = products.find(p => p.id === item.id);
-                product.stock -= item.quantity;
-            });
-            
-            saveProductsToStorage();
-            
-            // Sync to Firebase
-            await saveProductsToFirebase();
-            
-            // Show success message with order summary
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-            
-            showNotification(`Thank you for your purchase! ${itemCount} item(s) for $${total.toFixed(2)}`, 'success', 5000);
-            
-            cart = [];
-            updateCartDisplay();
-            renderProducts();
-            
-            // If stock manager is open, update it
-            if (stockManager.style.display === 'block') {
-                renderStockManager();
-            }
-        }
+  const { error: saleErr } = await supabaseClient.from('sales').insert({
+    worker_id, product_id, qty, price, date
+  });
+  if (saleErr) { setLoading(document.getElementById('saleBtn'), false); return toast(saleErr.message, true); }
 
-        // Initialize the shop when page loads
-        document.addEventListener('DOMContentLoaded', initShop);
-    </script>
+  // Decrement stock
+  const { error: stockErr } = await supabaseClient
+    .from('products').update({ stock: prod.stock - qty }).eq('id', product_id);
+  if (stockErr) { setLoading(document.getElementById('saleBtn'), false); return toast(stockErr.message, true); }
+
+  setLoading(document.getElementById('saleBtn'), false);
+  toast('Shitja u regjistrua');
+  document.getElementById('saleQty').value = 1;
+  refreshAll();
+}
+
+async function deleteSale(id) {
+  if (!confirm('Fshi shitjen? Stoku do rikthehet.')) return;
+
+  const { data: s, error: getErr } = await supabaseClient
+    .from('sales').select('*').eq('id', id).single();
+  if (getErr) return toast(getErr.message, true);
+
+  const { data: prod } = await supabaseClient
+    .from('products').select('stock').eq('id', s.product_id).single();
+
+  await supabaseClient.from('products')
+    .update({ stock: (prod?.stock || 0) + s.qty }).eq('id', s.product_id);
+
+  const { error } = await supabaseClient.from('sales').delete().eq('id', id);
+  if (error) return toast(error.message, true);
+  toast('U fshi');
+  refreshAll();
+}
+
+async function addStock() {
+  const worker_id = parseInt(document.getElementById('stockWorker').value);
+  const product_id = parseInt(document.getElementById('stockProduct').value);
+  const qty = parseInt(document.getElementById('stockQty').value);
+  const cost = parseFloat(document.getElementById('stockCost').value) || 0;
+  const date = document.getElementById('stockDate').value;
+
+  if (!worker_id || !product_id || !qty || qty <= 0) return toast('Plotëso të gjitha fushat saktë', true);
+
+  const { error: entryErr } = await supabaseClient.from('stock_entries').insert({
+    worker_id, product_id, qty, cost, date
+  });
+  if (entryErr) return toast(entryErr.message, true);
+
+  const { data: prod } = await supabaseClient
+    .from('products').select('stock').eq('id', product_id).single();
+
+  const { error: stockErr } = await supabaseClient
+    .from('products').update({ stock: (prod?.stock || 0) + qty }).eq('id', product_id);
+  if (stockErr) return toast(stockErr.message, true);
+
+  toast('Hyrja u regjistrua');
+  document.getElementById('stockQty').value = 1;
+  document.getElementById('stockCost').value = '';
+  refreshAll();
+}
+
+async function deleteStock(id) {
+  if (!confirm('Fshi hyrjen? Stoku do ulet.')) return;
+  const { data: s } = await supabaseClient.from('stock_entries').select('*').eq('id', id).single();
+  if (!s) return;
+
+  const { data: prod } = await supabaseClient
+    .from('products').select('stock').eq('id', s.product_id).single();
+
+  await supabaseClient.from('products')
+    .update({ stock: Math.max(0, (prod?.stock || 0) - s.qty) }).eq('id', s.product_id);
+
+  const { error } = await supabaseClient.from('stock_entries').delete().eq('id', id);
+  if (error) return toast(error.message, true);
+  toast('U fshi');
+  refreshAll();
+}
+
+// ==================== REPORTS ====================
+async function loadDailyReport() {
+  const date = document.getElementById('reportDate').value;
+  if (!date) return;
+
+  const workers = await fetchWorkers();
+  const sales = await fetchSalesByDate(date);
+  const entries = await fetchStockByDate(date);
+
+  let totalDay = 0;
+  let workerHtml = '';
+  workers.forEach((w, i) => {
+    const ws = sales.filter(s => s.worker_id === w.id);
+    const amount = ws.reduce((a, s) => a + s.qty * s.price, 0);
+    const qty = ws.reduce((a, s) => a + s.qty, 0);
+    totalDay += amount;
+    workerHtml += `
+      <div class="stat worker${i + 1}">
+        <div class="stat-label">${escapeHtml(w.name)}</div>
+        <div class="stat-value">€${fmt(amount)}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:4px;">${qty} CD të shitura</div>
+      </div>`;
+  });
+  workerHtml += `
+    <div class="stat total">
+      <div class="stat-label">Totali i ditës</div>
+      <div class="stat-value">€${fmt(totalDay)}</div>
+      <div style="font-size:12px;color:#94a3b8;margin-top:4px;">${sales.reduce((a, s) => a + s.qty, 0)} CD</div>
+    </div>`;
+
+  let html = `<div class="card"><h2>📅 Raporti për ${date}</h2>
+    <div class="grid grid-3">${workerHtml}</div></div>`;
+
+  // Detail per worker
+  workers.forEach(w => {
+    const ws = sales.filter(s => s.worker_id === w.id);
+    const amount = ws.reduce((a, s) => a + s.qty * s.price, 0);
+    html += `<div class="card">
+      <h2>${escapeHtml(w.name)} — Total: €${fmt(amount)}</h2>
+      ${ws.length ? `<table><thead><tr><th>Produkti</th><th>Sasia</th><th>Çmimi</th><th>Totali</th></tr></thead><tbody>
+        ${ws.map(s => `<tr>
+          <td>${escapeHtml(s.products?.name || '?')}</td>
+          <td>${s.qty}</td>
+          <td>€${fmt(s.price)}</td>
+          <td><b>€${fmt(s.qty * s.price)}</b></td>
+        </tr>`).join('')}
+      </tbody></table>` : '<div class="empty">Nuk ka shitje</div>'}
+    </div>`;
+  });
+
+  if (entries.length) {
+    html += `<div class="card">
+      <h2>📦 Hyrje malli (${date})</h2>
+      <table><thead><tr><th>Produkti</th><th>Sasia</th><th>Kosto</th><th>Totali</th><th>Punëtori</th></tr></thead><tbody>
+        ${entries.map(s => `<tr>
+          <td>${escapeHtml(s.products?.name || '?')}</td>
+          <td>+${s.qty}</td>
+          <td>€${fmt(s.cost)}</td>
+          <td>€${fmt(s.qty * s.cost)}</td>
+          <td>${escapeHtml(s.workers?.name || '?')}</td>
+        </tr>`).join('')}
+      </tbody></table>
+    </div>`;
+  }
+
+  document.getElementById('dailyReport').innerHTML = html;
+}
+
+async function loadRangeReport() {
+  const from = document.getElementById('rangeFrom').value;
+  const to = document.getElementById('rangeTo').value;
+  if (!from || !to) return toast('Zgjidh të dyja datat', true);
+
+  const { data: sales, error } = await supabaseClient
+    .from('sales')
+    .select(`*, workers(name), products(name)`)
+    .gte('date', from)
+    .lte('date', to)
+    .order('date');
+
+  if (error) return toast(error.message, true);
+
+  const totalSales = sales.reduce((a, s) => a + s.qty * s.price, 0);
+  const totalQty = sales.reduce((a, s) => a + s.qty, 0);
+  const workers = await fetchWorkers();
+
+  let workerHtml = '';
+  workers.forEach((w, i) => {
+    const ws = sales.filter(s => s.worker_id === w.id);
+    const amount = ws.reduce((a, s) => a + s.qty * s.price, 0);
+    const qty = ws.reduce((a, s) => a + s.qty, 0);
+    workerHtml += `
+      <div class="stat worker${i + 1}">
+        <div class="stat-label">${escapeHtml(w.name)}</div>
+        <div class="stat-value">€${fmt(amount)}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:4px;">${qty} CD</div>
+      </div>`;
+  });
+
+  const html = `
+    <div class="card">
+      <h2>Periudha ${from} → ${to}</h2>
+      <div class="grid grid-3">
+        ${workerHtml}
+        <div class="stat total">
+          <div class="stat-label">Totali periudhës</div>
+          <div class="stat-value">€${fmt(totalSales)}</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:4px;">${totalQty} CD</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Detaje</h2>
+      ${sales.length ? `<table><thead><tr><th>Data</th><th>Punëtori</th><th>Produkti</th><th>Sasia</th><th>Totali</th></tr></thead><tbody>
+        ${sales.map(s => `<tr>
+          <td>${s.date}</td>
+          <td>${escapeHtml(s.workers?.name || '?')}</td>
+          <td>${escapeHtml(s.products?.name || '?')}</td>
+          <td>${s.qty}</td>
+          <td>€${fmt(s.qty * s.price)}</td>
+        </tr>`).join('')}
+      </tbody></table>` : '<div class="empty">Nuk ka shitje</div>'}
+    </div>`;
+
+  document.getElementById('rangeReport').innerHTML = html;
+}
+
+// ==================== REALTIME ====================
+let realtimeChannel = null;
+function setupRealtime() {
+  if (realtimeChannel) supabaseClient.removeChannel(realtimeChannel);
+
+  realtimeChannel = supabaseClient
+    .channel('cdshop-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, () => {
+      console.log('Sales changed — refreshing');
+      refreshAll();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'stock_entries' }, () => {
+      console.log('Stock changed — refreshing');
+      refreshAll();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+      refreshAll();
+    })
+    .subscribe();
+}
+
+// ==================== INIT ====================
+async function init() {
+  document.querySelectorAll('.tab').forEach(t => {
+    t.onclick = () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      document.getElementById('panel-' + t.dataset.tab).classList.add('active');
+      refreshAll();
+    };
+  });
+
+  // Check existing session
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    showApp();
+  }
+
+  // Listen for auth changes
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+      currentUser = session.user;
+      if (document.getElementById('app').classList.contains('hidden')) showApp();
+    } else {
+      currentUser = null;
+      document.getElementById('app').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }
+  });
+
+  // Enter key on login
+  document.getElementById('loginPassword').addEventListener('keypress', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+}
+
+init();
+</script>
 </body>
 </html>
